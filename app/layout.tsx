@@ -15,10 +15,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Karmel Café & Restaurant",
-  description: "Karmel Café & Restaurant — Schweinfurt. Somali & African cuisine, coffee, and reservations.",
+  description:
+    "Karmel Café & Restaurant — Schweinfurt. Somali & African cuisine, coffee, and reservations.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html
       lang="en"

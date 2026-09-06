@@ -1,7 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
+import { firebaseAuth } from "@/lib/firebaseClient";
 
 type Step = "form" | "verify-email" | "verify-phone" | "done";
 
@@ -11,6 +13,8 @@ export default function RegisterPage() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const confirmationRef = useRef<ConfirmationResult | null>(null);
+  const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
 
   async function submitRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -41,25 +45,47 @@ export default function RegisterPage() {
     if (!res.ok) return setError(json.error);
     setCode("");
     setStep("verify-phone");
+    sendPhoneOtp();
+  }
+
+  async function sendPhoneOtp() {
+    setError("");
+    try {
+      if (!recaptchaRef.current) {
+        recaptchaRef.current = new RecaptchaVerifier(firebaseAuth, "recaptcha-container", { size: "invisible" });
+      }
+      confirmationRef.current = await signInWithPhoneNumber(firebaseAuth, form.phone, recaptchaRef.current);
+    } catch {
+      setError("Could not send SMS code. Check the phone number format (+49...).");
+    }
   }
 
   async function submitPhoneCode(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const res = await fetch("/api/verify-phone", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: form.phone, code }),
-    });
-    const json = await res.json();
-    setLoading(false);
-    if (!res.ok) return setError(json.error);
-    setStep("done");
+    try {
+      if (!confirmationRef.current) throw new Error("no-confirmation");
+      const result = await confirmationRef.current.confirm(code);
+      const idToken = await result.user.getIdToken();
+      const res = await fetch("/api/verify-phone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken, phone: form.phone }),
+      });
+      const json = await res.json();
+      setLoading(false);
+      if (!res.ok) return setError(json.error);
+      setStep("done");
+    } catch {
+      setLoading(false);
+      setError("Incorrect or expired code.");
+    }
   }
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-stone-200 flex items-center justify-center px-6 py-24">
+      <div id="recaptcha-container" />
       <div className="w-full max-w-md border border-white/10 p-10 bg-white/5">
         <h1 className="text-3xl text-white mb-8 text-center">Create Account</h1>
 
@@ -67,70 +93,38 @@ export default function RegisterPage() {
 
         {step === "form" && (
           <form onSubmit={submitRegister} className="flex flex-col gap-5">
-            <Input
-              label="Full Name"
-              value={form.name}
-              onValueChange={(v) => setForm({ ...form, name: v })}
-              required
-            />
-            <Input
-              label="Email"
-              type="email"
-              value={form.email}
-              onValueChange={(v) => setForm({ ...form, email: v })}
-              required
-            />
-            <Input
-              label="Phone"
-              type="tel"
-              value={form.phone}
-              onValueChange={(v) => setForm({ ...form, phone: v })}
-              required
-            />
-            <Input
-              label="Password"
-              type="password"
-              value={form.password}
-              onValueChange={(v) => setForm({ ...form, password: v })}
-              required
-              minLength={8}
-            />
-            <SubmitBtn loading={loading}>Create Account</SubmitBtn>
+            <Input label="Full Name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
+            <Input label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required />
+            <Input label="Phone (+49...)" type="tel" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required />
+            <Input label="Password" type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} required minLength={8} />
+            <SubmitBtn loading={loading}>Register</SubmitBtn>
           </form>
         )}
 
         {step === "verify-email" && (
           <form onSubmit={submitEmailCode} className="flex flex-col gap-5">
-            <p className="text-sm text-stone-400 text-center">
-              Enter the code we sent to {form.email}
-            </p>
-            <Input label="Email code" value={code} onValueChange={setCode} required />
+            <p className="text-sm text-stone-400">Enter the 6-digit code sent to {form.email}</p>
+            <Input label="Email Code" value={code} onChange={setCode} required />
             <SubmitBtn loading={loading}>Verify Email</SubmitBtn>
           </form>
         )}
 
         {step === "verify-phone" && (
           <form onSubmit={submitPhoneCode} className="flex flex-col gap-5">
-            <p className="text-sm text-stone-400 text-center">
-              Enter the SMS code sent to {form.phone}
-            </p>
-            <Input label="SMS code" value={code} onValueChange={setCode} required />
+            <p className="text-sm text-stone-400">Enter the SMS code sent to {form.phone}</p>
+            <Input label="Phone Code" value={code} onChange={setCode} required />
             <SubmitBtn loading={loading}>Verify Phone</SubmitBtn>
+            <button type="button" onClick={sendPhoneOtp} className="text-xs text-amber-500 text-center">
+              Resend code
+            </button>
           </form>
         )}
 
         {step === "done" && (
-          <div className="text-center space-y-6">
-            <p className="text-amber-500 tracking-widest uppercase text-sm">Account ready</p>
+          <div className="text-center">
+            <p className="text-amber-500 mb-6">Account verified! You can now sign in.</p>
             <button
-              type="button"
-              onClick={() =>
-                signIn("credentials", {
-                  email: form.email,
-                  password: form.password,
-                  callbackUrl: "/",
-                })
-              }
+              onClick={() => signIn("credentials", { email: form.email, password: form.password, callbackUrl: "/" })}
               className="w-full py-4 bg-amber-500 text-black text-xs font-bold uppercase tracking-widest"
             >
               Sign In
@@ -139,35 +133,21 @@ export default function RegisterPage() {
         )}
 
         <p className="text-center text-xs text-stone-500 mt-8">
-          Already have an account?{" "}
-          <Link href="/login" className="text-amber-500">
-            Sign in
-          </Link>
+          Already have an account? <Link href="/login" className="text-amber-500">Sign in</Link>
         </p>
       </div>
     </main>
   );
 }
 
-function Input({
-  label,
-  onValueChange,
-  value,
-  ...rest
-}: {
-  label: string;
-  value: string;
-  onValueChange: (v: string) => void;
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange" | "value">) {
+function Input(props: { label: string } & React.InputHTMLAttributes<HTMLInputElement> & { onChange: (v: string) => void; value: string }) {
+  const { label, onChange, ...rest } = props;
   return (
     <label className="flex flex-col gap-2">
-      <span className="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-bold">
-        {label}
-      </span>
+      <span className="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-bold">{label}</span>
       <input
         {...rest}
-        value={value}
-        onChange={(e) => onValueChange(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
         className="bg-transparent border-b border-stone-600 focus:border-amber-500 py-2 text-white outline-none"
       />
     </label>

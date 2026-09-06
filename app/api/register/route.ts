@@ -4,7 +4,6 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { isDisposableEmail } from "@/lib/disposableEmail";
 import { sendMail, otpEmailHtml } from "@/lib/mailer";
-import { sendPhoneOtp } from "@/lib/sms";
 import { generateOtp, otpExpiry } from "@/lib/otp";
 import { rateLimit } from "@/lib/rateLimit";
 
@@ -45,18 +44,10 @@ export async function POST(req: NextRequest) {
   const emailOtp = generateOtp();
 
   const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      phone,
-      passwordHash,
-      emailOtp,
-      emailOtpExpires: otpExpiry(10),
-    },
+    data: { name, email, phone, passwordHash, emailOtp, emailOtpExpires: otpExpiry(10) },
   });
 
   await sendMail(email, "Verify your email — Karmel Café & Restaurant", otpEmailHtml(emailOtp));
-  await sendPhoneOtp(phone);
 
   return NextResponse.json({ ok: true, userId: user.id });
-}
+} 
