@@ -74,6 +74,26 @@ Admin SDK service account.
    since it's the only thing standing between the OTP/registration endpoints
    and brute-force/abuse.
 
+## 7b. Data retention cleanup (GDPR)
+1. Generate a secret: `openssl rand -hex 32` → put it in `CRON_SECRET`.
+2. `vercel.json` already schedules `/api/cron/cleanup` to run daily via Vercel
+   Cron; Vercel automatically sends `CRON_SECRET` as the request's Bearer
+   token, so no extra setup is needed once the env var is set.
+3. This deletes unverified accounts older than `UNVERIFIED_ACCOUNT_RETENTION_DAYS`
+   (default 7) and reservations older than `RESERVATION_RETENTION_MONTHS`
+   (default 24) — adjust both in your environment variables if you need a
+   different retention policy.
+
+## 7c. Legal pages — REQUIRED before going live in Germany
+`/impressum` and `/datenschutz` exist as templates with `[bracketed
+placeholders]` for your real business details (legal name/form, register
+info, VAT ID if any, contact email, hosting/database provider names, and the
+retention periods above). Fill these in — and ideally have them checked by a
+German lawyer or a service like eRecht24/Trusted Shops — before the site is
+publicly reachable. An incomplete or missing Impressum is a common target for
+German cease-and-desist letters (*Abmahnungen*), independent of any GDPR fine
+risk.
+
 ## 8. First admin account
 There's no public "become admin" button (by design). After you register your
 own account normally on the live site:

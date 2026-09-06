@@ -37,6 +37,8 @@ model User {
   resetToken        String?
   resetTokenExpires DateTime?
 
+  privacyConsentAt  DateTime?
+
   accounts      Account[]
   sessions      Session[]
   reservations  Reservation[]
@@ -94,6 +96,7 @@ model Reservation {
   tableNumber Int?
   notes       String?
   status      ReservationStatus @default(PENDING)
+  consentAt   DateTime?
 
   createdAt DateTime @default(now())
 }

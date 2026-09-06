@@ -10,6 +10,7 @@ type Step = "form" | "verify-email" | "verify-phone" | "done";
 export default function RegisterPage() {
   const [step, setStep] = useState<Step>("form");
   const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
+  const [consent, setConsent] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,7 +24,7 @@ export default function RegisterPage() {
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, consent }),
     });
     const json = await res.json();
     setLoading(false);
@@ -97,7 +98,23 @@ export default function RegisterPage() {
             <Input label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required />
             <Input label="Phone (+49...)" type="tel" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required />
             <Input label="Password" type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} required minLength={8} />
-            <SubmitBtn loading={loading}>Register</SubmitBtn>
+            <label className="flex items-start gap-3 text-xs text-stone-400">
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                required
+                className="mt-0.5 accent-amber-500"
+              />
+              <span>
+                I accept the{" "}
+                <Link href="/datenschutz" target="_blank" className="text-amber-500 underline">
+                  privacy policy
+                </Link>
+                .
+              </span>
+            </label>
+            <SubmitBtn loading={loading} disabled={!consent}>Register</SubmitBtn>
           </form>
         )}
 
@@ -157,11 +174,19 @@ function Input(
   );
 }
 
-function SubmitBtn({ children, loading }: { children: React.ReactNode; loading: boolean }) {
+function SubmitBtn({
+  children,
+  loading,
+  disabled,
+}: {
+  children: React.ReactNode;
+  loading: boolean;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="submit"
-      disabled={loading}
+      disabled={loading || disabled}
       className="w-full mt-2 py-4 bg-amber-500 text-black text-xs font-bold uppercase tracking-widest hover:bg-white transition-colors disabled:opacity-50"
     >
       {loading ? "..." : children}

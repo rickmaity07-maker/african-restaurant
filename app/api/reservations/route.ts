@@ -13,6 +13,9 @@ const schema = z.object({
   time: z.string(),
   partySize: z.coerce.number().int().min(1).max(30),
   notes: z.string().max(1000).optional(),
+  consent: z.boolean().refine((v) => v === true, {
+    message: "You must accept the privacy policy to make a reservation.",
+  }),
 });
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -45,6 +48,7 @@ export async function POST(req: NextRequest) {
       time: data.time,
       partySize: data.partySize,
       notes: data.notes,
+      consentAt: new Date(),
     },
   });
 
