@@ -1,0 +1,41 @@
+{
+  "name": "fashionable-african-restaurant",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "eslint",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "make-admin": "node scripts/make-admin.mjs"
+  },
+  "dependencies": {
+    "framer-motion": "^13.1.1",
+    "next": "16.3.3",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "next-auth": "5.0.0-beta.32",
+    "@auth/prisma-adapter": "^2.7.4",
+    "@prisma/client": "^6.2.1",
+    "bcryptjs": "^2.4.3",
+    "resend": "^4.0.1",
+    "twilio": "^5.4.2",
+    "disposable-email-domains": "^1.0.62",
+    "zod": "^3.24.1",
+    "@upstash/ratelimit": "^2.0.5",
+    "@upstash/redis": "^1.34.3"
+  },
+  "devDependencies": {
+    "prisma": "^6.2.1",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.3",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

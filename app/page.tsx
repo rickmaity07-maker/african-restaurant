@@ -1,0 +1,559 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { motion, useScroll, useTransform, Variants } from "framer-motion";
+import { Playfair_Display, Montserrat } from "next/font/google";
+import { useSession, signOut } from "next-auth/react";
+import MenuSection from "@/components/MenuSection";
+import MapEmbed from "@/components/MapEmbed";
+import ReservationForm from "@/components/ReservationForm";
+import { restaurantInfo } from "@/lib/menuData";
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  style: ["normal", "italic"],
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["200", "300", "400", "500", "600"],
+});
+
+export default function Home() {
+  const { scrollY } = useScroll();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [navVisible, setNavVisible] = useState(true);
+  const [pastHero, setPastHero] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [activeSection, setActiveSection] = useState("");
+
+  const heroBgY = useTransform(scrollY, [0, 1000], ["0%", "30%"]);
+  const heroTextY = useTransform(scrollY, [0, 600], ["0%", "50%"]);
+  const heroOpacity = useTransform(scrollY, [0, 350], [1, 0]);
+
+  const { data: session } = useSession();
+
+  // Auto-hide navbar: visible on hero, hide when scrolling down past hero,
+  // show again on scroll up or when mouse is near the top (desktop).
+  useEffect(() => {
+    const heroThreshold = typeof window !== "undefined" ? window.innerHeight * 0.7 : 500;
+
+    const onScroll = () => {
+      const y = window.scrollY;
+      const goingDown = y > lastScrollY;
+      const atTop = y < 40;
+      const beyondHero = y > heroThreshold;
+
+      setPastHero(beyondHero);
+
+      if (atTop || mobileOpen) {
+        setNavVisible(true);
+      } else if (beyondHero && goingDown && y - lastScrollY > 4) {
+        setNavVisible(false);
+      } else if (!goingDown && lastScrollY - y > 4) {
+        setNavVisible(true);
+      }
+
+      setLastScrollY(y);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [lastScrollY, mobileOpen]);
+
+  // Desktop: reveal nav when pointer approaches the top edge
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (e.clientY < 72) setNavVisible(true);
+    };
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => window.removeEventListener("mousemove", onMove);
+  }, []);
+
+
+  // Scroll-spy: pick the section whose top is closest above the midpoint of the viewport
+  useEffect(() => {
+    const sectionIds = ["experience", "menu", "reservations", "location"];
+
+    const updateActive = () => {
+      const mid = window.scrollY + window.innerHeight * 0.35;
+      let current = "";
+
+      for (const id of sectionIds) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const top = el.offsetTop;
+        const bottom = top + el.offsetHeight;
+        if (mid >= top && mid < bottom) {
+          current = id;
+          break;
+        }
+      }
+
+      // Fallback: last section whose top is above midpoint
+      if (!current) {
+        for (const id of sectionIds) {
+          const el = document.getElementById(id);
+          if (!el) continue;
+          if (el.offsetTop <= mid) current = id;
+        }
+      }
+
+      // Still in hero
+      if (window.scrollY < window.innerHeight * 0.45) {
+        current = "";
+      }
+
+      setActiveSection((prev) => (prev === current ? prev : current));
+
+      const desired = current ? `#${current}` : "";
+      if (window.location.hash !== desired) {
+        if (current) {
+          window.history.replaceState(null, "", `#${current}`);
+        } else {
+          window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        }
+      }
+    };
+
+    updateActive();
+    window.addEventListener("scroll", updateActive, { passive: true });
+    window.addEventListener("resize", updateActive, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", updateActive);
+      window.removeEventListener("resize", updateActive);
+    };
+  }, []);
+
+  const fadeInUp: Variants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring", stiffness: 45, damping: 20 },
+    },
+  };
+
+  const staggerContainer: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.12, delayChildren: 0.15 },
+    },
+  };
+
+  const navLinks = (
+    <>
+      <Link
+        href="#experience"
+        onClick={() => setMobileOpen(false)}
+        className={`transition-colors duration-300 relative group ${
+          activeSection === "experience" ? "text-amber-500" : "hover:text-amber-500"
+        }`}
+      >
+        Experience
+        <span className={`absolute -bottom-1 left-0 h-[1px] bg-amber-500 transition-all duration-300 hidden md:block ${
+          activeSection === "experience" ? "w-full" : "w-0 group-hover:w-full"
+        }`} />
+      </Link>
+      <Link
+        href="#menu"
+        onClick={() => setMobileOpen(false)}
+        className={`transition-colors duration-300 relative group ${
+          activeSection === "menu" ? "text-amber-500" : "hover:text-amber-500"
+        }`}
+      >
+        Menu
+        <span className={`absolute -bottom-1 left-0 h-[1px] bg-amber-500 transition-all duration-300 hidden md:block ${
+          activeSection === "menu" ? "w-full" : "w-0 group-hover:w-full"
+        }`} />
+      </Link>
+      <Link
+        href="#location"
+        onClick={() => setMobileOpen(false)}
+        className={`transition-colors duration-300 relative group ${
+          activeSection === "location" ? "text-amber-500" : "hover:text-amber-500"
+        }`}
+      >
+        Location
+        <span className={`absolute -bottom-1 left-0 h-[1px] bg-amber-500 transition-all duration-300 hidden md:block ${
+          activeSection === "location" ? "w-full" : "w-0 group-hover:w-full"
+        }`} />
+      </Link>
+      {session?.user ? (
+        <>
+          {(session.user as { role?: string }).role === "ADMIN" && (
+            <Link
+              href="/admin"
+              onClick={() => setMobileOpen(false)}
+              className="hover:text-amber-500 transition-colors duration-300"
+            >
+              Admin
+            </Link>
+          )}
+          <button
+            onClick={() => {
+              setMobileOpen(false);
+              signOut();
+            }}
+            className="hover:text-amber-500 transition-colors duration-300 text-left"
+          >
+            Sign Out
+          </button>
+        </>
+      ) : (
+        <Link
+          href="/login"
+          onClick={() => setMobileOpen(false)}
+          className="hover:text-amber-500 transition-colors duration-300"
+        >
+          Sign In
+        </Link>
+      )}
+    </>
+  );
+
+  return (
+    <main
+      className={`min-h-screen bg-[#0a0a0a] text-stone-200 ${montserrat.className} selection:bg-amber-600 selection:text-white overflow-x-hidden`}
+    >
+      {/* Noise overlay */}
+      <div
+        className="pointer-events-none fixed inset-0 z-[100] opacity-[0.03]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+        }}
+      />
+
+      {/* ========== NAV ========== */}
+      <motion.nav
+        initial={{ y: -80, opacity: 0 }}
+        animate={{
+          y: navVisible ? 0 : -100,
+          opacity: navVisible ? 1 : 0,
+        }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className={`fixed w-full z-50 flex items-center justify-between px-4 sm:px-6 md:px-10 lg:px-12 py-4 sm:py-5 md:py-6 transition-colors duration-300 ${
+          pastHero
+            ? "bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5"
+            : "bg-gradient-to-b from-[#0a0a0a]/95 to-transparent"
+        }`}
+      >
+        <Link href="/" className="group relative flex items-center gap-2">
+          <span
+            className={`text-xl sm:text-2xl md:text-3xl tracking-[0.2em] uppercase font-black ${playfair.className} bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 bg-clip-text text-transparent transition-all duration-500 group-hover:tracking-[0.28em]`}
+          >
+            Karmel
+          </span>
+          <span className="hidden sm:block w-1.5 h-1.5 rounded-full bg-amber-500 opacity-80 group-hover:scale-125 transition-transform duration-300" />
+        </Link>
+
+        {/* Desktop links */}
+        <div className="hidden md:flex gap-8 lg:gap-12 text-[10px] tracking-[0.3em] uppercase font-medium">
+          {navLinks}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Link
+            href="#reservations"
+            className={`group flex items-center gap-3 text-[10px] uppercase tracking-[0.3em] font-medium ${
+              activeSection === "reservations" ? "text-amber-400" : "text-amber-500"
+            }`}
+          >
+            <span className="hidden sm:block">Reserve</span>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-amber-500/30 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-black transition-all duration-300 text-sm">
+              ↗
+            </div>
+          </Link>
+
+          {/* Mobile hamburger */}
+          <button
+            type="button"
+            aria-label="Toggle menu"
+            onClick={() => setMobileOpen((v) => !v)}
+            className="md:hidden w-9 h-9 flex flex-col items-center justify-center gap-1.5 border border-stone-700 rounded-full"
+          >
+            <span
+              className={`block w-4 h-[1.5px] bg-stone-200 transition-all ${
+                mobileOpen ? "rotate-45 translate-y-[4px]" : ""
+              }`}
+            />
+            <span
+              className={`block w-4 h-[1.5px] bg-stone-200 transition-all ${
+                mobileOpen ? "opacity-0" : ""
+              }`}
+            />
+            <span
+              className={`block w-4 h-[1.5px] bg-stone-200 transition-all ${
+                mobileOpen ? "-rotate-45 -translate-y-[4px]" : ""
+              }`}
+            />
+          </button>
+        </div>
+      </motion.nav>
+
+      {/* Mobile menu drawer */}
+      <div
+        className={`fixed inset-0 z-40 md:hidden transition-all duration-300 ${
+          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <div
+          className="absolute inset-0 bg-black/70"
+          onClick={() => setMobileOpen(false)}
+        />
+        <div
+          className={`absolute top-0 right-0 h-full w-[78%] max-w-xs bg-[#0a0a0a] border-l border-stone-800 p-8 pt-24 flex flex-col gap-6 text-sm uppercase tracking-[0.2em] transition-transform duration-300 ${
+            mobileOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {navLinks}
+          <Link
+            href="#reservations"
+            onClick={() => setMobileOpen(false)}
+            className="mt-4 py-3 text-center bg-amber-500 text-black font-bold tracking-[0.2em] text-xs"
+          >
+            Reserve a Table
+          </Link>
+        </div>
+      </div>
+
+      {/* ========== HERO ========== */}
+      <section className="relative h-[100svh] min-h-[480px] max-h-[900px] flex flex-col items-center justify-center text-center px-4 overflow-hidden bg-[#0a0a0a]">
+        <motion.div
+          style={{ y: heroBgY }}
+          className="absolute inset-0 z-0 h-[120%] -top-[10%]"
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/50 via-transparent to-[#0a0a0a] z-10" />
+          <Image
+            src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2070&auto=format&fit=crop"
+            alt="Bar Texture"
+            fill
+            className="object-cover opacity-80"
+            priority
+            sizes="100vw"
+          />
+        </motion.div>
+
+        <motion.div
+          style={{ y: heroTextY, opacity: heroOpacity }}
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="relative z-10 flex flex-col items-center w-full mt-10 sm:mt-16"
+        >
+          <motion.h1
+            variants={fadeInUp}
+            className={`karmel-title-fill text-[18vw] sm:text-[15vw] md:text-[13vw] lg:text-[11vw] font-black uppercase tracking-tighter leading-[0.85] mb-3 sm:mb-4 ${playfair.className}`}
+          >
+            Karmel
+          </motion.h1>
+
+          <motion.h2
+            variants={fadeInUp}
+            className="text-[11px] sm:text-sm md:text-base lg:text-lg font-medium uppercase tracking-[0.25em] sm:tracking-[0.4em] text-stone-200 max-w-xs sm:max-w-none drop-shadow-lg"
+          >
+            Café &amp; Restaurant — Somali &amp; African Cuisine
+          </motion.h2>
+        </motion.div>
+      </section>
+
+      {/* ========== EXPERIENCE ========== */}
+      <section
+        id="experience"
+        className="relative py-16 sm:py-24 md:py-28 lg:py-0 px-4 sm:px-6 md:px-10 lg:px-0 min-h-0 lg:h-[100vh] lg:min-h-[640px] lg:max-h-[900px] flex items-center bg-[#0a0a0a] overflow-hidden"
+      >
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[#0a0a0a]/80 to-[#0a0a0a] z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-transparent to-transparent z-10" />
+          <Image
+            src="https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?q=80&w=2070&auto=format&fit=crop"
+            alt="Coffee Roasting"
+            fill
+            className="object-cover opacity-40 sm:opacity-50"
+            sizes="100vw"
+          />
+        </div>
+
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          className="relative z-20 max-w-7xl lg:max-w-none mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-0 items-center h-full"
+        >
+          <motion.div
+            variants={fadeInUp}
+            className="z-20 p-5 sm:p-8 md:p-12 lg:p-16 xl:p-20 bg-[#0a0a0a]/70 backdrop-blur-md border border-white/5 lg:border-0 lg:h-full lg:flex lg:flex-col lg:justify-center"
+          >
+            <h2 className="text-[9px] sm:text-[10px] tracking-[0.4em] font-bold text-amber-500 uppercase mb-5 sm:mb-8 flex items-center gap-3 sm:gap-4">
+              <span className="w-6 sm:w-8 h-[1px] bg-amber-500" /> The Philosophy
+            </h2>
+            <h3
+              className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-5 sm:mb-8 leading-[1.15] text-white ${playfair.className}`}
+            >
+              Rooted in <br />
+              <span className="italic text-stone-400">tradition.</span>
+            </h3>
+            <p className="text-stone-300 font-light leading-relaxed sm:leading-loose text-sm md:text-base max-w-md">
+              From Somali chai and specialty coffee at breakfast to Bariis and
+              Baasto platters for dinner, Karmel Café &amp; Restaurant is a
+              sensory journey rooted in Somali and East African tradition,
+              served in the heart of Schweinfurt.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            viewport={{ once: true }}
+            className="relative h-[40vh] sm:h-[50vh] md:h-[55vh] lg:h-full w-full"
+          >
+            <Image
+              src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=2071&auto=format&fit=crop"
+              alt="Coffee"
+              fill
+              className="object-cover shadow-2xl"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+            />
+          </motion.div>
+        </motion.div>
+      </section>
+
+      <MenuSection />
+
+      {/* ========== RESERVATIONS ========== */}
+      <section
+        id="reservations"
+        className="relative py-16 sm:py-24 md:py-28 lg:py-0 lg:h-[100vh] lg:min-h-[640px] lg:max-h-[900px] px-4 sm:px-6 flex items-center justify-center"
+      >
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="https://images.unsplash.com/photo-1574096079513-d8259312b78a?q=80&w=2070&auto=format&fit=crop"
+            alt="Cocktails at the bar"
+            fill
+            className="object-cover"
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/65 to-[#0a0a0a]" />
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true }}
+          className="relative z-10 w-full max-w-3xl bg-[#0a0a0a]/75 backdrop-blur-2xl p-5 sm:p-8 md:p-12 lg:p-16 border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.7)]"
+        >
+          <div className="text-center mb-8 sm:mb-12">
+            <h2
+              className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-3 text-white ${playfair.className}`}
+            >
+              Reserve a Table
+            </h2>
+            <p className="text-stone-300 text-xs sm:text-sm tracking-widest font-light">
+              Join the atmosphere.
+            </p>
+          </div>
+          <ReservationForm />
+        </motion.div>
+      </section>
+
+      {/* ========== LOCATION ========== */}
+      <section
+        id="location"
+        className="relative bg-[#0a0a0a] py-14 sm:py-20 md:py-24 lg:py-0 lg:h-[100vh] lg:min-h-[560px] lg:max-h-[800px] px-4 sm:px-6 md:px-10 lg:px-16 border-t border-stone-900 flex items-center"
+      >
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-12 md:gap-16 items-center">
+          <div>
+            <h2 className="text-[9px] sm:text-[10px] tracking-[0.4em] font-bold text-amber-500 uppercase mb-3 sm:mb-4">
+              Find Us
+            </h2>
+            <h3
+              className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-5 sm:mb-8 text-white ${playfair.className}`}
+            >
+              Visit Karmel
+            </h3>
+            <a
+              href={restaurantInfo.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-stone-300 hover:text-amber-500 transition-colors mb-2 underline underline-offset-4 text-sm sm:text-base"
+            >
+              {restaurantInfo.address}
+            </a>
+            <a
+              href={restaurantInfo.phoneHref}
+              className="block text-stone-300 hover:text-amber-500 transition-colors mb-6 sm:mb-8 underline underline-offset-4 text-sm sm:text-base"
+            >
+              {restaurantInfo.phone}
+            </a>
+            <div className="text-stone-400 text-xs sm:text-sm space-y-1.5">
+              {restaurantInfo.hours.map((h) => (
+                <div
+                  key={h.day}
+                  className="flex justify-between max-w-xs gap-4"
+                >
+                  <span>{h.day}</span>
+                  <span className="text-stone-300 whitespace-nowrap">{h.time}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <MapEmbed />
+        </div>
+      </section>
+
+      {/* ========== FOOTER ========== */}
+      <footer className="relative py-16 sm:py-24 md:py-28 text-center flex flex-col items-center border-t border-stone-900">
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="https://images.unsplash.com/photo-1572116469696-31de0f17cc34?q=80&w=2070&auto=format&fit=crop"
+            alt="Bar Bottles"
+            fill
+            className="object-cover opacity-30 sm:opacity-40 grayscale"
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-[#0a0a0a]/50 to-[#0a0a0a]" />
+        </div>
+
+        <div className="relative z-10 w-full max-w-5xl px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-6 sm:gap-8">
+            <div className="flex items-center gap-3">
+              <span
+                className={`text-2xl sm:text-3xl tracking-[0.22em] uppercase font-black ${playfair.className} bg-gradient-to-r from-amber-400 via-amber-500 to-amber-300 bg-clip-text text-transparent`}
+              >
+                Karmel
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-stone-300 items-center">
+              <a
+                href={restaurantInfo.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-amber-500 transition-colors text-center"
+              >
+                {restaurantInfo.address}
+              </a>
+              <p className="hidden sm:block text-amber-500">|</p>
+              <a
+                href={restaurantInfo.phoneHref}
+                className="hover:text-amber-500 transition-colors"
+              >
+                {restaurantInfo.phone}
+              </a>
+            </div>
+          </div>
+          <p className="text-stone-500 text-[8px] sm:text-[9px] uppercase tracking-[0.25em] mt-10 sm:mt-16">
+            &copy; {new Date().getFullYear()} Karmel Café &amp; Restaurant.
+          </p>
+        </div>
+      </footer>
+    </main>
+  );
+}

@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model User {
+  id                String    @id @default(cuid())
+  name              String
+  email             String    @unique
+  phone             String?   @unique
+  passwordHash      String?
+  role              Role      @default(USER)
+
+  emailVerified     DateTime?
+  emailOtp          String?
+  emailOtpExpires   DateTime?
+
+  phoneVerified     DateTime?
+  phoneOtp          String?
+  phoneOtpExpires   DateTime?
+
+  resetToken        String?
+  resetTokenExpires DateTime?
+
+  accounts      Account[]
+  sessions      Session[]
+  reservations  Reservation[]
+
+  createdAt DateTime @default(now())
+}
+
+// Standard Auth.js (NextAuth v5) Prisma adapter models — needed for Google/Facebook login
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Reservation {
+  id          String            @id @default(cuid())
+  userId      String?
+  user        User?             @relation(fields: [userId], references: [id])
+
+  name        String
+  email       String
+  phone       String
+  date        DateTime
+  time        String
+  partySize   Int
+  tableNumber Int?
+  notes       String?
+  status      ReservationStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+}

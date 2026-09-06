@@ -1,0 +1,77 @@
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { sendMail, reservationUserHtml, reservationAdminHtml } from "@/lib/mailer";
+import { rateLimit } from "@/lib/rateLimit";
+
+const schema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  phone: z.string().min(6),
+  date: z.string(), // yyyy-mm-dd
+  time: z.string(),
+  partySize: z.coerce.number().int().min(1).max(30),
+  notes: z.string().optional(),
+});
+
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+  const limited = await rateLimit("register", `reservation:${ip}`);
+  if (!limited.success) {
+    return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
+  }
+
+  const body = await req.json();
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+  }
+  const data = parsed.data;
+  const dateObj = new Date(data.date);
+  const dayName = DAY_NAMES[dateObj.getDay()];
+
+  const session = await auth();
+
+  const reservation = await prisma.reservation.create({
+    data: {
+      userId: session?.user ? (session.user as { id?: string }).id : undefined,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      date: dateObj,
+      time: data.time,
+      partySize: data.partySize,
+      notes: data.notes,
+    },
+  });
+
+  const dateLabel = dateObj.toLocaleDateString("en-GB");
+
+  await sendMail(
+    data.email,
+    "Reservation received — Karmel Café & Restaurant",
+    reservationUserHtml({ name: data.name, date: dateLabel, time: data.time, partySize: data.partySize })
+  );
+
+  if (process.env.ADMIN_EMAIL) {
+    await sendMail(
+      process.env.ADMIN_EMAIL,
+      `New reservation: ${data.name} — ${dayName} ${dateLabel} ${data.time}`,
+      reservationAdminHtml({ ...data, date: dateLabel, dayName })
+    );
+  }
+
+  return NextResponse.json({ ok: true, id: reservation.id });
+}
+
+export async function GET() {
+  const session = await auth();
+  if (!session?.user || (session.user as { role?: string }).role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const reservations = await prisma.reservation.findMany({ orderBy: { date: "asc" } });
+  return NextResponse.json({ reservations });
+}
