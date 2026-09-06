@@ -67,35 +67,70 @@ export default function RegisterPage() {
 
         {step === "form" && (
           <form onSubmit={submitRegister} className="flex flex-col gap-5">
-            <Input label="Full Name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
-            <Input label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required />
-            <Input label="Phone (+49...)" type="tel" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required />
-            <Input label="Password" type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} required minLength={8} />
-            <SubmitBtn loading={loading}>Register</SubmitBtn>
+            <Input
+              label="Full Name"
+              value={form.name}
+              onValueChange={(v) => setForm({ ...form, name: v })}
+              required
+            />
+            <Input
+              label="Email"
+              type="email"
+              value={form.email}
+              onValueChange={(v) => setForm({ ...form, email: v })}
+              required
+            />
+            <Input
+              label="Phone"
+              type="tel"
+              value={form.phone}
+              onValueChange={(v) => setForm({ ...form, phone: v })}
+              required
+            />
+            <Input
+              label="Password"
+              type="password"
+              value={form.password}
+              onValueChange={(v) => setForm({ ...form, password: v })}
+              required
+              minLength={8}
+            />
+            <SubmitBtn loading={loading}>Create Account</SubmitBtn>
           </form>
         )}
 
         {step === "verify-email" && (
           <form onSubmit={submitEmailCode} className="flex flex-col gap-5">
-            <p className="text-sm text-stone-400">Enter the 6-digit code sent to {form.email}</p>
-            <Input label="Email Code" value={code} onChange={setCode} required />
+            <p className="text-sm text-stone-400 text-center">
+              Enter the code we sent to {form.email}
+            </p>
+            <Input label="Email code" value={code} onValueChange={setCode} required />
             <SubmitBtn loading={loading}>Verify Email</SubmitBtn>
           </form>
         )}
 
         {step === "verify-phone" && (
           <form onSubmit={submitPhoneCode} className="flex flex-col gap-5">
-            <p className="text-sm text-stone-400">Enter the SMS code sent to {form.phone}</p>
-            <Input label="Phone Code" value={code} onChange={setCode} required />
+            <p className="text-sm text-stone-400 text-center">
+              Enter the SMS code sent to {form.phone}
+            </p>
+            <Input label="SMS code" value={code} onValueChange={setCode} required />
             <SubmitBtn loading={loading}>Verify Phone</SubmitBtn>
           </form>
         )}
 
         {step === "done" && (
-          <div className="text-center">
-            <p className="text-amber-500 mb-6">Account verified! You can now sign in.</p>
+          <div className="text-center space-y-6">
+            <p className="text-amber-500 tracking-widest uppercase text-sm">Account ready</p>
             <button
-              onClick={() => signIn("credentials", { email: form.email, password: form.password, callbackUrl: "/" })}
+              type="button"
+              onClick={() =>
+                signIn("credentials", {
+                  email: form.email,
+                  password: form.password,
+                  callbackUrl: "/",
+                })
+              }
               className="w-full py-4 bg-amber-500 text-black text-xs font-bold uppercase tracking-widest"
             >
               Sign In
@@ -104,21 +139,35 @@ export default function RegisterPage() {
         )}
 
         <p className="text-center text-xs text-stone-500 mt-8">
-          Already have an account? <Link href="/login" className="text-amber-500">Sign in</Link>
+          Already have an account?{" "}
+          <Link href="/login" className="text-amber-500">
+            Sign in
+          </Link>
         </p>
       </div>
     </main>
   );
 }
 
-function Input(props: { label: string } & React.InputHTMLAttributes<HTMLInputElement> & { onChange: (v: string) => void; value: string }) {
-  const { label, onChange, ...rest } = props;
+function Input({
+  label,
+  onValueChange,
+  value,
+  ...rest
+}: {
+  label: string;
+  value: string;
+  onValueChange: (v: string) => void;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange" | "value">) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-bold">{label}</span>
+      <span className="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-bold">
+        {label}
+      </span>
       <input
         {...rest}
-        onChange={(e) => onChange(e.target.value)}
+        value={value}
+        onChange={(e) => onValueChange(e.target.value)}
         className="bg-transparent border-b border-stone-600 focus:border-amber-500 py-2 text-white outline-none"
       />
     </label>
