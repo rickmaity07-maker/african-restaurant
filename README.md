@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Karmel Café & Restaurant
 
-## Getting Started
+Marketing site with account registration (email + phone verification),
+table reservations, and an admin dashboard for managing them.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- [Next.js 16](https://nextjs.org) (App Router) + React 19 + TypeScript
+- [Tailwind CSS v4](https://tailwindcss.com)
+- [Prisma](https://www.prisma.io) + PostgreSQL
+- [NextAuth v5](https://authjs.dev) (credentials + Google/Facebook OAuth)
+- [Firebase Authentication](https://firebase.google.com/docs/auth) for phone OTP
+- [Resend](https://resend.com) for transactional email
+- [Upstash Redis](https://upstash.com) for rate limiting
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Getting started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Copy `.env.example` to `.env` and fill in real values — see
+   [`DEPLOYMENT.md`](./DEPLOYMENT.md) for step-by-step instructions for every
+   external service (database, auth providers, Firebase, Resend, Upstash).
+2. Install dependencies and set up the database:
+   ```bash
+   npm install
+   npx prisma db push
+   ```
+3. Run the dev server:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Script | Purpose |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Generate the Prisma client and build for production |
+| `npm run start` | Run the production build |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run the test suite |
+| `npm run db:push` | Push the Prisma schema to the database |
+| `npm run make-admin -- <email>` | Promote a registered user to `ADMIN` |
 
-To learn more about Next.js, take a look at the following resources:
+## Data model
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+See [`prisma/schema.prisma`](./prisma/schema.prisma) for the full schema —
+`User` (auth + verification state), `Reservation` (table bookings), plus the
+standard Auth.js adapter tables (`Account`, `Session`, `VerificationToken`).
+The menu itself is static content in [`lib/menuData.ts`](./lib/menuData.ts),
+not database-backed — editing it requires a code change and redeploy.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Full setup and deployment instructions (all required environment variables,
+external service setup, first-admin bootstrapping) are in
+[`DEPLOYMENT.md`](./DEPLOYMENT.md).

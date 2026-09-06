@@ -12,7 +12,7 @@ const schema = z.object({
   date: z.string(), // yyyy-mm-dd
   time: z.string(),
   partySize: z.coerce.number().int().min(1).max(30),
-  notes: z.string().optional(),
+  notes: z.string().max(1000).optional(),
 });
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -50,18 +50,20 @@ export async function POST(req: NextRequest) {
 
   const dateLabel = dateObj.toLocaleDateString("en-GB");
 
-  await sendMail(
+  const guestMail = await sendMail(
     data.email,
     "Reservation received — Karmel Café & Restaurant",
     reservationUserHtml({ name: data.name, date: dateLabel, time: data.time, partySize: data.partySize })
   );
+  if (guestMail.error) console.error("[reservations] failed to send guest confirmation to", data.email);
 
   if (process.env.ADMIN_EMAIL) {
-    await sendMail(
+    const adminMail = await sendMail(
       process.env.ADMIN_EMAIL,
       `New reservation: ${data.name} — ${dayName} ${dateLabel} ${data.time}`,
       reservationAdminHtml({ ...data, date: dateLabel, dayName })
     );
+    if (adminMail.error) console.error("[reservations] failed to send admin notification");
   }
 
   return NextResponse.json({ ok: true, id: reservation.id });

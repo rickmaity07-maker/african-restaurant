@@ -41,20 +41,38 @@ Do these in order. Every value you collect goes into `.env` locally and into
 4. Set `ADMIN_EMAIL` to the restaurant owner's inbox — this is where every new
    reservation notification (name, email, phone, day, date, time, guests) is sent.
 
-## 6. Twilio Verify — phone number OTP
-1. Go to https://www.twilio.com/try-twilio → sign up (free trial credit included).
-2. Console dashboard → copy **Account SID** and **Auth Token** → `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN`.
-3. Left menu → "Verify" → "Services" → "Create new Service" (name it "Karmel").
-4. Copy the **Service SID** → `TWILIO_VERIFY_SERVICE_SID`.
-   Twilio Verify handles the SMS OTP send/check/expiry/retry logic for you —
-   no extra code needed.
-5. On a trial account you can only send SMS to verified numbers — verify your
-   own test number in the Twilio console, or upgrade the account before going live.
+## 6. Firebase — phone number OTP verification
+Phone OTP is handled by Firebase Authentication (client SDK sends the SMS via
+Firebase's own reCAPTCHA-gated flow; the server verifies the resulting ID
+token with the Firebase Admin SDK). You need both a client config and an
+Admin SDK service account.
+1. Go to https://console.firebase.google.com → "Add project".
+2. Build → Authentication → "Get started" → enable the **Phone** sign-in provider.
+3. Project Settings (gear icon) → General → "Your apps" → add a Web app →
+   copy the config values into `NEXT_PUBLIC_FIREBASE_API_KEY` /
+   `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` / `NEXT_PUBLIC_FIREBASE_PROJECT_ID` /
+   `NEXT_PUBLIC_FIREBASE_APP_ID`.
+4. Project Settings → Service Accounts → "Generate new private key" → downloads
+   a JSON file. From it, copy `project_id` → `FIREBASE_PROJECT_ID`,
+   `client_email` → `FIREBASE_CLIENT_EMAIL`, and `private_key` →
+   `FIREBASE_PRIVATE_KEY` (keep the `\n` sequences exactly as they appear in
+   the JSON — the app converts them to real newlines at runtime).
+5. On Firebase's free (Spark) plan, phone auth is limited to a small daily
+   quota and test numbers; upgrade to Blaze (pay-as-you-go) before real launch
+   traffic. If these variables are missing or wrong in production, phone
+   verification returns a clean "temporarily unavailable" error instead of
+   crashing the rest of the site — but it should still be configured properly
+   before launch.
 
-## 7. Upstash Redis — rate limiting (recommended, stops registration/OTP abuse)
+## 7. Upstash Redis — rate limiting (REQUIRED before production)
 1. Go to https://upstash.com → sign up → "Create Database" (Redis, Global/Regional, free tier).
 2. Copy "REST URL" and "REST TOKEN" → `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`.
-   If you skip this, the app still works — rate limiting is just disabled.
+   Locally (`NODE_ENV=development`), the app runs without these and just logs
+   a warning that rate limiting is disabled. In production (`NODE_ENV=production`,
+   which Vercel sets automatically), the app **refuses to start** if these are
+   missing — rate limiting cannot be silently skipped on a live deployment,
+   since it's the only thing standing between the OTP/registration endpoints
+   and brute-force/abuse.
 
 ## 8. First admin account
 There's no public "become admin" button (by design). After you register your
@@ -68,8 +86,9 @@ This flips your `role` to `ADMIN`, unlocking `/admin`.
 ## 9. Deploy to Vercel
 1. Push this repo to GitHub.
 2. https://vercel.com → "Add New Project" → import the repo.
-3. In "Environment Variables", paste every key from `.env.example` with your real values
-   (use your production `NEXTAUTH_URL`, e.g. `https://your-project.vercel.app`).
+3. In "Environment Variables", paste every key from `.env.example` (in the repo
+   root) with your real values (use your production `NEXTAUTH_URL`, e.g.
+   `https://your-project.vercel.app`).
 4. Deploy. Vercel runs `prisma generate` automatically via the `postinstall` script.
 5. After the first deploy, run `npx prisma db push` once (locally, pointed at the
    same `DATABASE_URL`) to make sure the production database has all tables.
@@ -80,6 +99,10 @@ This flips your `role` to `ADMIN`, unlocking `/admin`.
   `disposable-email-domains` blocklist, and separately rejects domains with no
   mail server (MX record) at all — this catches most throwaway/temp-mail sites,
   including new ones not yet in any blocklist.
-- Email + phone must each be verified with a one-time code before login works.
+- Only **email** verification gates login (`lib/auth.ts`'s credentials
+  `authorize()`). Phone verification (Firebase) is collected during
+  registration but is not currently required to log in — a user can complete
+  email verification and sign in without ever finishing the phone-OTP step.
 - Registration, login, and OTP endpoints are all rate-limited per IP/email via
-  Upstash so scripted signup/brute-force attempts get throttled automatically.
+  Upstash so scripted signup/brute-force attempts get throttled automatically
+  (required in production — see §7).

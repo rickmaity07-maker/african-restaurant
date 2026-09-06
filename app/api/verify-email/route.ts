@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rateLimit";
+import { sha256 } from "@/lib/hash";
 
 export async function POST(req: NextRequest) {
   const { email, code } = await req.json();
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
   if (user.emailOtpExpires < new Date()) {
     return NextResponse.json({ error: "Code expired. Request a new one." }, { status: 400 });
   }
-  if (user.emailOtp !== code) {
+  if (user.emailOtp !== sha256(code ?? "")) {
     return NextResponse.json({ error: "Incorrect code." }, { status: 400 });
   }
 

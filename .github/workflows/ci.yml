@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm test --if-present
+
+      # `next build` forces NODE_ENV=production, and lib/rateLimit.ts refuses
+      # to even load in production without Upstash configured — these are
+      # placeholder values so the build succeeds without a real backend.
+      # NEXT_PUBLIC_FIREBASE_API_KEY must be a well-formed (not just non-empty)
+      # key, or the /register page's static prerender fails at build time.
+      - run: npm run build
+        env:
+          DATABASE_URL: "postgresql://user:password@localhost:5432/db"
+          AUTH_SECRET: "ci-build-placeholder-secret"
+          NEXTAUTH_URL: "http://localhost:3000"
+          UPSTASH_REDIS_REST_URL: "https://ci-placeholder.upstash.io"
+          UPSTASH_REDIS_REST_TOKEN: "ci-placeholder-token"
+          NEXT_PUBLIC_FIREBASE_API_KEY: "AIzaSyDaGmWKa4JsXZ-HjGw7ISLan_Mg8ec4bIT"
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "ci-placeholder.firebaseapp.com"
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: "ci-placeholder"
+          NEXT_PUBLIC_FIREBASE_APP_ID: "1:1234567890:web:abcdef1234567890"

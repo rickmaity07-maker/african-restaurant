@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { isDisposableEmail } from "@/lib/disposableEmail";
 import { sendMail, otpEmailHtml } from "@/lib/mailer";
 import { generateOtp, otpExpiry } from "@/lib/otp";
 import { rateLimit } from "@/lib/rateLimit";
+import { sha256 } from "@/lib/hash";
 
 const schema = z.object({
   name: z.string().min(2),
@@ -43,11 +45,20 @@ export async function POST(req: NextRequest) {
   const passwordHash = await bcrypt.hash(password, 12);
   const emailOtp = generateOtp();
 
-  const user = await prisma.user.create({
-    data: { name, email, phone, passwordHash, emailOtp, emailOtpExpires: otpExpiry(10) },
-  });
+  let user;
+  try {
+    user = await prisma.user.create({
+      data: { name, email, phone, passwordHash, emailOtp: sha256(emailOtp), emailOtpExpires: otpExpiry(10) },
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return NextResponse.json({ error: "An account with this email or phone already exists." }, { status: 409 });
+    }
+    throw err;
+  }
 
-  await sendMail(email, "Verify your email — Karmel Café & Restaurant", otpEmailHtml(emailOtp));
+  const result = await sendMail(email, "Verify your email — Karmel Café & Restaurant", otpEmailHtml(emailOtp));
+  if (result.error) console.error("[register] failed to send verification email to", email);
 
   return NextResponse.json({ ok: true, userId: user.id });
-} 
+}

@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendMail, resetPasswordHtml } from "@/lib/mailer";
 import { rateLimit } from "@/lib/rateLimit";
+import { sha256 } from "@/lib/hash";
 
 export async function POST(req: NextRequest) {
   const { email } = await req.json();
@@ -18,11 +19,12 @@ export async function POST(req: NextRequest) {
   const resetToken = crypto.randomBytes(32).toString("hex");
   await prisma.user.update({
     where: { email },
-    data: { resetToken, resetTokenExpires: new Date(Date.now() + 30 * 60 * 1000) },
+    data: { resetToken: sha256(resetToken), resetTokenExpires: new Date(Date.now() + 30 * 60 * 1000) },
   });
 
   const link = `${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
-  await sendMail(email, "Reset your password — Karmel Café & Restaurant", resetPasswordHtml(link));
+  const result = await sendMail(email, "Reset your password — Karmel Café & Restaurant", resetPasswordHtml(link));
+  if (result.error) console.error("[forgot-password] failed to send reset email to", email);
 
   return NextResponse.json({ ok: true });
 }

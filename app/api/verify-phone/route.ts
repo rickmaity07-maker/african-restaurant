@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { firebaseAdminAuth } from "@/lib/firebaseAdmin";
+import { getFirebaseAdminAuth } from "@/lib/firebaseAdmin";
 import { rateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
@@ -11,14 +12,29 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const decoded = await firebaseAdminAuth.verifyIdToken(idToken);
+    const decoded = await getFirebaseAdminAuth().verifyIdToken(idToken);
     if (!decoded.phone_number || decoded.phone_number !== phone) {
       return NextResponse.json({ error: "Phone number mismatch." }, { status: 400 });
     }
-  } catch {
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith("Firebase Admin is not configured")) {
+      console.error("[verify-phone]", err.message);
+      return NextResponse.json(
+        { error: "Phone verification is temporarily unavailable." },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: "Invalid or expired verification." }, { status: 400 });
   }
 
-  await prisma.user.update({ where: { phone }, data: { phoneVerified: new Date() } });
+  try {
+    await prisma.user.update({ where: { phone }, data: { phoneVerified: new Date() } });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
+      return NextResponse.json({ error: "No account found for this phone number." }, { status: 400 });
+    }
+    throw err;
+  }
+
   return NextResponse.json({ ok: true });
 }

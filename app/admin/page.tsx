@@ -1,7 +1,14 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import AdminTable from "./AdminTable";
 
 export default async function AdminPage() {
+  const session = await auth();
+  if (!session?.user || (session.user as { role?: string }).role !== "ADMIN") {
+    redirect("/login");
+  }
+
   const reservations = await prisma.reservation.findMany({ orderBy: { date: "asc" } });
 
   return (
