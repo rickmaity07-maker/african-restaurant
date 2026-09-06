@@ -1,16 +1,18 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function ReservationForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [error, setError] = useState("");
+  const [consent, setConsent] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("loading");
     setError("");
     const fd = new FormData(e.currentTarget);
-    const payload = Object.fromEntries(fd.entries());
+    const payload = { ...Object.fromEntries(fd.entries()), consent };
     const res = await fetch("/api/reservations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -24,6 +26,7 @@ export default function ReservationForm() {
     }
     setStatus("done");
     e.currentTarget.reset();
+    setConsent(false);
   }
 
   if (status === "done") {
@@ -62,10 +65,29 @@ export default function ReservationForm() {
           </select>
         </div>
       </div>
+
+      <label className="flex items-start gap-3 text-xs sm:text-sm text-stone-400">
+        <input
+          type="checkbox"
+          checked={consent}
+          onChange={(e) => setConsent(e.target.checked)}
+          required
+          className="mt-0.5 accent-amber-500"
+        />
+        <span>
+          I accept the processing of my data for this reservation as described
+          in the{" "}
+          <Link href="/datenschutz" target="_blank" className="text-amber-500 underline">
+            privacy policy
+          </Link>
+          .
+        </span>
+      </label>
+
       {error && <p className="text-red-400 text-sm">{error}</p>}
       <button
         type="submit"
-        disabled={status === "loading"}
+        disabled={status === "loading" || !consent}
         className="w-full mt-2 sm:mt-4 py-4 sm:py-5 bg-amber-500 text-[#0a0a0a] text-[10px] sm:text-xs font-bold tracking-[0.25em] sm:tracking-[0.3em] uppercase hover:bg-white hover:text-black transition-all duration-500 disabled:opacity-50 touch-manipulation"
       >
         {status === "loading" ? "Sending..." : "Confirm Reservation"}

@@ -14,6 +14,9 @@ const schema = z.object({
   email: z.string().email(),
   phone: z.string().min(6),
   password: z.string().min(8),
+  consent: z.boolean().refine((v) => v === true, {
+    message: "You must accept the privacy policy to register.",
+  }),
 });
 
 export async function POST(req: NextRequest) {
@@ -29,6 +32,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
   const { name, email, phone, password } = parsed.data;
+  const consentAt = new Date();
 
   if (await isDisposableEmail(email)) {
     return NextResponse.json(
@@ -48,7 +52,15 @@ export async function POST(req: NextRequest) {
   let user;
   try {
     user = await prisma.user.create({
-      data: { name, email, phone, passwordHash, emailOtp: sha256(emailOtp), emailOtpExpires: otpExpiry(10) },
+      data: {
+        name,
+        email,
+        phone,
+        passwordHash,
+        emailOtp: sha256(emailOtp),
+        emailOtpExpires: otpExpiry(10),
+        privacyConsentAt: consentAt,
+      },
     });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {

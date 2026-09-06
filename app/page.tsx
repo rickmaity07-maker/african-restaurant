@@ -549,7 +549,16 @@ export default function Home() {
               </a>
             </div>
           </div>
-          <p className="text-stone-500 text-[8px] sm:text-[9px] uppercase tracking-[0.25em] mt-10 sm:mt-16">
+          <div className="flex items-center justify-center gap-4 mt-10 sm:mt-16 text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-stone-500">
+            <Link href="/impressum" className="hover:text-amber-500 transition-colors">
+              Impressum
+            </Link>
+            <span className="text-stone-700">|</span>
+            <Link href="/datenschutz" className="hover:text-amber-500 transition-colors">
+              Datenschutz
+            </Link>
+          </div>
+          <p className="text-stone-500 text-[8px] sm:text-[9px] uppercase tracking-[0.25em] mt-4">
             &copy; {new Date().getFullYear()} Karmel Café &amp; Restaurant.
           </p>
         </div>
