@@ -140,7 +140,10 @@ export default function RegisterPage() {
   );
 }
 
-function Input(props: { label: string } & React.InputHTMLAttributes<HTMLInputElement> & { onChange: (v: string) => void; value: string }) {
+function Input(
+  props: { label: string; onChange: (v: string) => void; value: string } &
+    Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange" | "value">
+) {
   const { label, onChange, ...rest } = props;
   return (
     <label className="flex flex-col gap-2">
