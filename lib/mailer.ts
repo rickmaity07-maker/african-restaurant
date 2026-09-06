@@ -1,9 +1,25 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.EMAIL_FROM || "Karmel Café & Restaurant <onboarding@resend.dev>";
+const FROM =
+  process.env.EMAIL_FROM ||
+  "Karmel Café & Restaurant <onboarding@resend.dev>";
+
+function getResend() {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) {
+    throw new Error(
+      "Email is not configured. Set RESEND_API_KEY in environment variables."
+    );
+  }
+  return new Resend(key);
+}
 
 export async function sendMail(to: string, subject: string, html: string) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[mailer] RESEND_API_KEY missing — email skipped:", subject, "→", to);
+    return { id: "skipped-no-api-key" };
+  }
+  const resend = getResend();
   return resend.emails.send({ from: FROM, to, subject, html });
 }
 
@@ -25,7 +41,10 @@ export function resetPasswordHtml(link: string) {
 }
 
 export function reservationUserHtml(r: {
-  name: string; date: string; time: string; partySize: number;
+  name: string;
+  date: string;
+  time: string;
+  partySize: number;
 }) {
   return `<div style="font-family:sans-serif;padding:24px">
     <h2>Karmel Café &amp; Restaurant</h2>
@@ -40,8 +59,14 @@ export function reservationUserHtml(r: {
 }
 
 export function reservationAdminHtml(r: {
-  name: string; email: string; phone: string; date: string; time: string;
-  partySize: number; dayName: string; notes?: string;
+  name: string;
+  email: string;
+  phone: string;
+  date: string;
+  time: string;
+  partySize: number;
+  dayName: string;
+  notes?: string;
 }) {
   return `<div style="font-family:sans-serif;padding:24px">
     <h2>New Reservation</h2>
