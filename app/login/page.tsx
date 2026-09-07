@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -25,7 +26,10 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-stone-200 flex items-center justify-center px-6 py-24">
       <div className="w-full max-w-md border border-white/10 p-10 bg-white/5">
-        <h1 className="text-3xl text-white mb-8 text-center">Sign In</h1>
+        <div className="flex justify-center mb-6">
+          <Logo size="md" />
+        </div>
+        <h1 className="text-2xl text-white mb-8 text-center">Sign In</h1>
         {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
 
         <form onSubmit={onSubmit} className="flex flex-col gap-5">

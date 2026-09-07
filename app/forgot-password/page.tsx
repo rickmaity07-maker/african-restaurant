@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Logo from "@/components/Logo";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -18,7 +19,10 @@ export default function ForgotPasswordPage() {
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-stone-200 flex items-center justify-center px-6 py-24">
       <div className="w-full max-w-md border border-white/10 p-10 bg-white/5">
-        <h1 className="text-3xl text-white mb-8 text-center">Reset Password</h1>
+        <div className="flex justify-center mb-6">
+          <Logo size="md" />
+        </div>
+        <h1 className="text-2xl text-white mb-8 text-center">Reset Password</h1>
         {done ? (
           <p className="text-amber-500 text-sm text-center">
             If an account exists for that email, a reset link has been sent.

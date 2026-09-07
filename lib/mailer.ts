@@ -86,3 +86,43 @@ export function reservationAdminHtml(r: {
     </ul>
   </div>`;
 }
+
+export function reservationConfirmedHtml(r: {
+  name: string; date: string; time: string; partySize: number;
+}) {
+  return `<div style="font-family:sans-serif;padding:24px">
+    <h2>Karmel Café &amp; Restaurant</h2>
+    <p>Hi ${esc(r.name)}, your reservation is confirmed:</p>
+    <ul>
+      <li>Date: ${esc(r.date)}</li>
+      <li>Time: ${esc(r.time)}</li>
+      <li>Guests: ${r.partySize}</li>
+    </ul>
+    <p>We look forward to seeing you. Address: Schultesstraße 14, 97421 Schweinfurt.</p>
+  </div>`;
+}
+
+export function reservationCancelledHtml(r: {
+  name: string; date: string; time: string;
+}) {
+  return `<div style="font-family:sans-serif;padding:24px">
+    <h2>Karmel Café &amp; Restaurant</h2>
+    <p>Hi ${esc(r.name)}, your reservation for ${esc(r.date)} at ${esc(r.time)} has been cancelled.</p>
+    <p>If this wasn't expected, please contact us on 0176 21313818.</p>
+  </div>`;
+}
+
+export function reservationChangeRequestHtml(r: {
+  name: string; date: string; currentTime: string; proposedTime: string;
+  acceptUrl: string; declineUrl: string;
+}) {
+  return `<div style="font-family:sans-serif;padding:24px">
+    <h2>Karmel Café &amp; Restaurant</h2>
+    <p>Hi ${esc(r.name)}, we'd like to move your reservation on ${esc(r.date)}:</p>
+    <p>From <strong>${esc(r.currentTime)}</strong> to <strong>${esc(r.proposedTime)}</strong></p>
+    <p style="margin-top:20px">
+      <a href="${r.acceptUrl}" style="background:#f59e0b;color:#000;padding:12px 20px;text-decoration:none;font-weight:bold;margin-right:10px">Accept new time</a>
+      <a href="${r.declineUrl}" style="background:#333;color:#fff;padding:12px 20px;text-decoration:none;font-weight:bold">Keep original time</a>
+    </p>
+  </div>`;
+}

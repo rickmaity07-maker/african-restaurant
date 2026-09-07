@@ -9,6 +9,7 @@ import { useSession, signOut } from "next-auth/react";
 import MenuSection from "@/components/MenuSection";
 import MapEmbed from "@/components/MapEmbed";
 import ReservationForm from "@/components/ReservationForm";
+import Logo from "@/components/Logo";
 import { restaurantInfo } from "@/lib/menuData";
 
 const playfair = Playfair_Display({
@@ -155,7 +156,7 @@ export default function Home() {
         }`}
       >
         Experience
-        <span className={`absolute -bottom-1 left-0 h-[1px] bg-amber-500 transition-all duration-300 hidden md:block ${
+        <span className={`absolute -bottom-1 left-0 h-px-amber-500 transition-all duration-300 hidden md:block ${
           activeSection === "experience" ? "w-full" : "w-0 group-hover:w-full"
         }`} />
       </Link>
@@ -167,7 +168,7 @@ export default function Home() {
         }`}
       >
         Menu
-        <span className={`absolute -bottom-1 left-0 h-[1px] bg-amber-500 transition-all duration-300 hidden md:block ${
+        <span className={`absolute -bottom-1 left-0 h-px bg-amber-500 transition-all duration-300 hidden md:block ${
           activeSection === "menu" ? "w-full" : "w-0 group-hover:w-full"
         }`} />
       </Link>
@@ -179,7 +180,7 @@ export default function Home() {
         }`}
       >
         Location
-        <span className={`absolute -bottom-1 left-0 h-[1px] bg-amber-500 transition-all duration-300 hidden md:block ${
+        <span className={`absolute -bottom-1 left-0 h-px bg-amber-500 transition-all duration-300 hidden md:block ${
           activeSection === "location" ? "w-full" : "w-0 group-hover:w-full"
         }`} />
       </Link>
@@ -222,7 +223,7 @@ export default function Home() {
     >
       {/* Noise overlay */}
       <div
-        className="pointer-events-none fixed inset-0 z-[100] opacity-[0.03]"
+        className="pointer-events-none fixed inset-0 z-100 opacity-[0.03]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
         }}
@@ -239,20 +240,15 @@ export default function Home() {
         className={`fixed w-full z-50 flex items-center justify-between px-4 sm:px-6 md:px-10 lg:px-12 py-4 sm:py-5 md:py-6 transition-colors duration-300 ${
           pastHero
             ? "bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5"
-            : "bg-gradient-to-b from-[#0a0a0a]/95 to-transparent"
+            : "bg-linear-to-b from-[#0a0a0a]/95 to-transparent"
         }`}
       >
-        <Link href="/" className="group relative flex items-center gap-2">
-          <span
-            className={`text-xl sm:text-2xl md:text-3xl tracking-[0.2em] uppercase font-black ${playfair.className} bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 bg-clip-text text-transparent transition-all duration-500 group-hover:tracking-[0.28em]`}
-          >
-            Karmel
-          </span>
-          <span className="hidden sm:block w-1.5 h-1.5 rounded-full bg-amber-500 opacity-80 group-hover:scale-125 transition-transform duration-300" />
+        <Link href="/" className="group relative flex items-center transition-transform duration-500 group-hover:scale-[1.02]">
+          <Logo size="md" />
         </Link>
 
         {/* Desktop links */}
-        <div className="hidden md:flex gap-8 lg:gap-12 text-[10px] tracking-[0.3em] uppercase font-medium">
+        <div className="hidden md:flex gap-10 lg:gap-14 text-[10px] sm:text-[11px] tracking-[0.3em] sm:tracking-[0.35em] uppercase font-medium">
           {navLinks}
         </div>
 
@@ -278,7 +274,7 @@ export default function Home() {
           >
             <span
               className={`block w-4 h-[1.5px] bg-stone-200 transition-all ${
-                mobileOpen ? "rotate-45 translate-y-[4px]" : ""
+                mobileOpen ? "rotate-45 translate-y-1" : ""
               }`}
             />
             <span
@@ -288,7 +284,7 @@ export default function Home() {
             />
             <span
               className={`block w-4 h-[1.5px] bg-stone-200 transition-all ${
-                mobileOpen ? "-rotate-45 -translate-y-[4px]" : ""
+                mobileOpen ? "-rotate-45 -translate-y-1" : ""
               }`}
             />
           </button>
@@ -322,12 +318,12 @@ export default function Home() {
       </div>
 
       {/* ========== HERO ========== */}
-      <section className="relative h-[100svh] min-h-[480px] max-h-[900px] flex flex-col items-center justify-center text-center px-4 overflow-hidden bg-[#0a0a0a]">
+      <section className="relative h-svh min-h-120-h-[900px] flex flex-col items-center justify-center text-center px-4 overflow-hidden bg-[#0a0a0a]">
         <motion.div
           style={{ y: heroBgY }}
-          className="absolute inset-0 z-0 h-[120%] -top-[10%]"
+          className="absolute inset-0 z-0 h-[120%] top-[-10%]"
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/50 via-transparent to-[#0a0a0a] z-10" />
+          <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0a]/50 via-transparent to-[#0a0a0a] z-10" />
           <Image
             src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2070&auto=format&fit=crop"
             alt="Bar Texture"
@@ -364,11 +360,11 @@ export default function Home() {
       {/* ========== EXPERIENCE ========== */}
       <section
         id="experience"
-        className="relative py-16 sm:py-24 md:py-28 lg:py-0 px-4 sm:px-6 md:px-10 lg:px-0 min-h-0 lg:h-[100vh] lg:min-h-[640px] lg:max-h-[900px] flex items-center bg-[#0a0a0a] overflow-hidden"
+        className="relative py-16 sm:py-24 md:py-28 lg:py-0 px-4 sm:px-6 md:px-10 lg:px-0 min-h-0 lg:h-screen lg:min-h-160 lg:max-h-225 flex items-center bg-[#0a0a0a] overflow-hidden"
       >
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[#0a0a0a]/80 to-[#0a0a0a] z-10" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-transparent to-transparent z-10" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-transparent via-[#0a0a0a]/80 to-[#0a0a0a] z-10" />
+          <div className="absolute inset-0 bg-linear-to-r from-[#0a0a0a] via-transparent to-transparent z-10" />
           <Image
             src="https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?q=80&w=2070&auto=format&fit=crop"
             alt="Coffee Roasting"
@@ -390,7 +386,7 @@ export default function Home() {
             className="z-20 p-5 sm:p-8 md:p-12 lg:p-16 xl:p-20 bg-[#0a0a0a]/70 backdrop-blur-md border border-white/5 lg:border-0 lg:h-full lg:flex lg:flex-col lg:justify-center"
           >
             <h2 className="text-[9px] sm:text-[10px] tracking-[0.4em] font-bold text-amber-500 uppercase mb-5 sm:mb-8 flex items-center gap-3 sm:gap-4">
-              <span className="w-6 sm:w-8 h-[1px] bg-amber-500" /> The Philosophy
+              <span className="w-6 sm:w-8 h-px bg-amber-500" /> The Philosophy
             </h2>
             <h3
               className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-5 sm:mb-8 leading-[1.15] text-white ${playfair.className}`}
@@ -429,7 +425,7 @@ export default function Home() {
       {/* ========== RESERVATIONS ========== */}
       <section
         id="reservations"
-        className="relative py-16 sm:py-24 md:py-28 lg:py-0 lg:h-[100vh] lg:min-h-[640px] lg:max-h-[900px] px-4 sm:px-6 flex items-center justify-center"
+        className="relative py-16 sm:py-24 md:py-28 lg:py-0 lg:h-screen lg:min-h-160 lg:max-h-225 px-4 sm:px-6 flex items-center justify-center"
       >
         <div className="absolute inset-0 z-0">
           <Image
@@ -439,7 +435,7 @@ export default function Home() {
             className="object-cover"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/65 to-[#0a0a0a]" />
+          <div className="absolute inset-0 bg-linear-to-t from-[#0a0a0a] via-[#0a0a0a]/65 to-[#0a0a0a]" />
         </div>
 
         <motion.div
@@ -466,7 +462,7 @@ export default function Home() {
       {/* ========== LOCATION ========== */}
       <section
         id="location"
-        className="relative bg-[#0a0a0a] py-14 sm:py-20 md:py-24 lg:py-0 lg:h-[100vh] lg:min-h-[560px] lg:max-h-[800px] px-4 sm:px-6 md:px-10 lg:px-16 border-t border-stone-900 flex items-center"
+        className="relative bg-[#0a0a0a] py-14 sm:py-20 md:py-24 lg:py-0 lg:h-screen lg:min-h-140 lg:max-h-2004 sm:px-6 md:px-10 lg:px-16 border-t border-stone-900 flex items-center"
       >
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-12 md:gap-16 items-center">
           <div>
@@ -518,19 +514,12 @@ export default function Home() {
             className="object-cover opacity-30 sm:opacity-40 grayscale"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-[#0a0a0a]/50 to-[#0a0a0a]" />
+          <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0a] via-[#0a0a0a]/50 to-[#0a0a0a]" />
         </div>
 
         <div className="relative z-10 w-full max-w-5xl px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-6 sm:gap-8">
-            <div className="flex items-center gap-3">
-              <span
-                className={`text-2xl sm:text-3xl tracking-[0.22em] uppercase font-black ${playfair.className} bg-gradient-to-r from-amber-400 via-amber-500 to-amber-300 bg-clip-text text-transparent`}
-              >
-                Karmel
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            </div>
+            <Logo size="sm" />
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-stone-300 items-center">
               <a
                 href={restaurantInfo.mapsUrl}
@@ -549,16 +538,7 @@ export default function Home() {
               </a>
             </div>
           </div>
-          <div className="flex items-center justify-center gap-4 mt-10 sm:mt-16 text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-stone-500">
-            <Link href="/impressum" className="hover:text-amber-500 transition-colors">
-              Impressum
-            </Link>
-            <span className="text-stone-700">|</span>
-            <Link href="/datenschutz" className="hover:text-amber-500 transition-colors">
-              Datenschutz
-            </Link>
-          </div>
-          <p className="text-stone-500 text-[8px] sm:text-[9px] uppercase tracking-[0.25em] mt-4">
+          <p className="text-stone-500 text-[8px] sm:text-[9px] uppercase tracking-[0.25em] mt-10 sm:mt-16">
             &copy; {new Date().getFullYear()} Karmel Café &amp; Restaurant.
           </p>
         </div>

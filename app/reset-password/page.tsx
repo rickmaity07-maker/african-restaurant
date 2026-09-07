@@ -1,6 +1,7 @@
 "use client";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Logo from "@/components/Logo";
 
 function ResetForm() {
   const params = useSearchParams();
@@ -25,7 +26,10 @@ function ResetForm() {
 
   return (
     <div className="w-full max-w-md border border-white/10 p-10 bg-white/5">
-      <h1 className="text-3xl text-white mb-8 text-center">Set New Password</h1>
+      <div className="flex justify-center mb-6">
+        <Logo size="md" />
+      </div>
+      <h1 className="text-2xl text-white mb-8 text-center">Set New Password</h1>
       {done ? (
         <p className="text-amber-500 text-sm text-center">Password updated. You can now sign in.</p>
       ) : (
