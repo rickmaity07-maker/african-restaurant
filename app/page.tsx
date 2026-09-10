@@ -10,6 +10,8 @@ import MenuSection from "@/components/MenuSection";
 import MapEmbed from "@/components/MapEmbed";
 import ReservationForm from "@/components/ReservationForm";
 import Logo from "@/components/Logo";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { useLanguage } from "@/lib/languageContext";
 import { restaurantInfo } from "@/lib/menuData";
 
 const playfair = Playfair_Display({
@@ -24,6 +26,7 @@ const montserrat = Montserrat({
 });
 
 export default function Home() {
+  const { t, lang } = useLanguage();
   const { scrollY } = useScroll();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [navVisible, setNavVisible] = useState(true);
@@ -144,7 +147,7 @@ export default function Home() {
       opacity: 1,
       transition: { staggerChildren: 0.12, delayChildren: 0.15 },
     },
-  };
+};
 
   const navLinks = (
     <>
@@ -155,7 +158,7 @@ export default function Home() {
           activeSection === "experience" ? "text-amber-500" : "hover:text-amber-500"
         }`}
       >
-        Experience
+        {t.nav.experience}
         <span className={`absolute -bottom-1 left-0 h-px-amber-500 transition-all duration-300 hidden md:block ${
           activeSection === "experience" ? "w-full" : "w-0 group-hover:w-full"
         }`} />
@@ -167,7 +170,7 @@ export default function Home() {
           activeSection === "menu" ? "text-amber-500" : "hover:text-amber-500"
         }`}
       >
-        Menu
+        {t.nav.menu}
         <span className={`absolute -bottom-1 left-0 h-px bg-amber-500 transition-all duration-300 hidden md:block ${
           activeSection === "menu" ? "w-full" : "w-0 group-hover:w-full"
         }`} />
@@ -179,11 +182,16 @@ export default function Home() {
           activeSection === "location" ? "text-amber-500" : "hover:text-amber-500"
         }`}
       >
-        Location
+        {t.nav.location}
         <span className={`absolute -bottom-1 left-0 h-px bg-amber-500 transition-all duration-300 hidden md:block ${
           activeSection === "location" ? "w-full" : "w-0 group-hover:w-full"
         }`} />
       </Link>
+    </>
+  );
+
+  const userMenu = (
+    <>
       {session?.user ? (
         <>
           {(session.user as { role?: string }).role === "ADMIN" && (
@@ -192,17 +200,30 @@ export default function Home() {
               onClick={() => setMobileOpen(false)}
               className="hover:text-amber-500 transition-colors duration-300"
             >
-              Admin
+              {t.nav.admin}
             </Link>
           )}
+          <Link
+            href="/account"
+            onClick={() => setMobileOpen(false)}
+            className="hover:text-amber-500 transition-colors duration-300 flex items-center gap-1"
+            aria-label={t.nav.account}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </Link>
           <button
             onClick={() => {
               setMobileOpen(false);
               signOut();
             }}
-            className="hover:text-amber-500 transition-colors duration-300 text-left"
+            className="hover:text-amber-500 transition-colors duration-300 flex items-center gap-1"
+            aria-label={t.nav.logout}
           >
-            Sign Out
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
           </button>
         </>
       ) : (
@@ -211,7 +232,7 @@ export default function Home() {
           onClick={() => setMobileOpen(false)}
           className="hover:text-amber-500 transition-colors duration-300"
         >
-          Sign In
+          {t.nav.login}
         </Link>
       )}
     </>
@@ -237,29 +258,44 @@ export default function Home() {
           opacity: navVisible ? 1 : 0,
         }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className={`fixed w-full z-50 flex items-center justify-between px-4 sm:px-6 md:px-10 lg:px-12 py-4 sm:py-5 md:py-6 transition-colors duration-300 ${
+        className={`fixed w-full z-50 flex items-center px-4 sm:px-6 md:px-10 lg:px-12 py-4 sm:py-5 md:py-6 transition-colors duration-300 ${
           pastHero
             ? "bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5"
             : "bg-linear-to-b from-[#0a0a0a]/95 to-transparent"
         }`}
       >
-        <Link href="/" className="group relative flex items-center transition-transform duration-500 group-hover:scale-[1.02]">
-          <Logo size="md" />
-        </Link>
+        {/* Left: Logo */}
+        <div className="w-1/3 flex justify-start">
+          <Link href="/" className="group relative flex items-center transition-transform duration-500 group-hover:scale-[1.02]">
+            <Logo size="md" />
+          </Link>
+        </div>
 
-        {/* Desktop links */}
-        <div className="hidden md:flex gap-10 lg:gap-14 text-[10px] sm:text-[11px] tracking-[0.3em] sm:tracking-[0.35em] uppercase font-medium">
+        {/* Center: Nav links */}
+        <div className="w-1/3 hidden md:flex justify-center gap-10 lg:gap-14 text-[10px] sm:text-[11px] tracking-[0.3em] sm:tracking-[0.35em] uppercase font-medium">
           {navLinks}
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Right: User menu, language selector, reservation button */}
+        <div className="w-1/3 flex justify-end items-center gap-3">
+          {/* User menu / login */}
+          <div className="hidden md:flex items-center gap-3">
+            {userMenu}
+          </div>
+
+          {/* Language selector */}
+          <div className="hidden md:flex items-center">
+            <LanguageSelector />
+          </div>
+
+          {/* Reservation button */}
           <Link
             href="#reservations"
             className={`group flex items-center gap-3 text-[10px] uppercase tracking-[0.3em] font-medium ${
               activeSection === "reservations" ? "text-amber-400" : "text-amber-500"
             }`}
           >
-            <span className="hidden sm:block">Reserve</span>
+            <span className="hidden sm:block">{t.nav.reservations}</span>
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-amber-500/30 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-black transition-all duration-300 text-sm">
               ↗
             </div>
@@ -307,12 +343,54 @@ export default function Home() {
           }`}
         >
           {navLinks}
+          <div className="flex flex-col gap-3 pt-4 border-t border-stone-800">
+            {session?.user ? (
+              <>
+                {(session.user as { role?: string }).role === "ADMIN" && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setMobileOpen(false)}
+                    className="text-center hover:text-amber-500 transition-colors"
+                  >
+                    {t.nav.admin}
+                  </Link>
+                )}
+                <Link
+                  href="/account"
+                  onClick={() => setMobileOpen(false)}
+                  className="text-center hover:text-amber-500 transition-colors"
+                >
+                  {t.nav.account}
+                </Link>
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    signOut();
+                  }}
+                  className="text-center hover:text-amber-500 transition-colors bg-transparent p-0 text-left"
+                >
+                  {t.nav.logout}
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="text-center hover:text-amber-500 transition-colors"
+              >
+                {t.nav.login}
+              </Link>
+            )}
+          </div>
+          <div className="flex justify-center pt-4 border-t border-stone-800">
+            <LanguageSelector />
+          </div>
           <Link
             href="#reservations"
             onClick={() => setMobileOpen(false)}
             className="mt-4 py-3 text-center bg-amber-500 text-black font-bold tracking-[0.2em] text-xs"
           >
-            Reserve a Table
+            {t.reservations.reserveBtn}
           </Link>
         </div>
       </div>
@@ -341,18 +419,18 @@ export default function Home() {
           animate="visible"
           className="relative z-10 flex flex-col items-center w-full mt-10 sm:mt-16"
         >
-          <motion.h1
+<motion.h1
             variants={fadeInUp}
             className={`karmel-title-fill text-[18vw] sm:text-[15vw] md:text-[13vw] lg:text-[11vw] font-black uppercase tracking-tighter leading-[0.85] mb-3 sm:mb-4 ${playfair.className}`}
           >
-            Karmel
+            {t.hero.title}
           </motion.h1>
 
           <motion.h2
             variants={fadeInUp}
             className="text-[11px] sm:text-sm md:text-base lg:text-lg font-medium uppercase tracking-[0.25em] sm:tracking-[0.4em] text-stone-200 max-w-xs sm:max-w-none drop-shadow-lg"
           >
-            Café &amp; Restaurant — Somali &amp; African Cuisine
+            {t.hero.subtitle}
           </motion.h2>
         </motion.div>
       </section>
@@ -381,24 +459,21 @@ export default function Home() {
           viewport={{ once: true, margin: "-50px" }}
           className="relative z-20 max-w-7xl lg:max-w-none mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-0 items-center h-full"
         >
-          <motion.div
+<motion.div
             variants={fadeInUp}
             className="z-20 p-5 sm:p-8 md:p-12 lg:p-16 xl:p-20 bg-[#0a0a0a]/70 backdrop-blur-md border border-white/5 lg:border-0 lg:h-full lg:flex lg:flex-col lg:justify-center"
           >
             <h2 className="text-[9px] sm:text-[10px] tracking-[0.4em] font-bold text-amber-500 uppercase mb-5 sm:mb-8 flex items-center gap-3 sm:gap-4">
-              <span className="w-6 sm:w-8 h-px bg-amber-500" /> The Philosophy
+              <span className="w-6 sm:w-8 h-px bg-amber-500" /> {t.experience.sectionTitle}
             </h2>
             <h3
               className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-5 sm:mb-8 leading-[1.15] text-white ${playfair.className}`}
             >
-              Rooted in <br />
-              <span className="italic text-stone-400">tradition.</span>
+              {(t.experience.sectionSubtitle || "Rooted in tradition.").split('. ')[0]} <br />
+              <span className="italic text-stone-400">{(t.experience.sectionSubtitle || "Rooted in tradition.").split('. ')[1] || "Rooted in tradition."}</span>
             </h3>
             <p className="text-stone-300 font-light leading-relaxed sm:leading-loose text-sm md:text-base max-w-md">
-              From Somali chai and specialty coffee at breakfast to Bariis and
-              Baasto platters for dinner, Karmel Café &amp; Restaurant is a
-              sensory journey rooted in Somali and East African tradition,
-              served in the heart of Schweinfurt.
+              {t.experience.sectionDescription || "From Somali chai and specialty coffee at breakfast to Bariis and Baasto platters for dinner, Karmel Café & Restaurant is a sensory journey rooted in Somali and East African tradition, served in the heart of Schweinfurt."}
             </p>
           </motion.div>
 
@@ -449,10 +524,10 @@ export default function Home() {
             <h2
               className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-3 text-white ${playfair.className}`}
             >
-              Reserve a Table
+              {t.reservations.sectionTitle}
             </h2>
             <p className="text-stone-300 text-xs sm:text-sm tracking-widest font-light">
-              Join the atmosphere.
+              {t.reservations.sectionSubtitle}
             </p>
           </div>
           <ReservationForm />
@@ -467,12 +542,12 @@ export default function Home() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-12 md:gap-16 items-center">
           <div>
             <h2 className="text-[9px] sm:text-[10px] tracking-[0.4em] font-bold text-amber-500 uppercase mb-3 sm:mb-4">
-              Find Us
+              {t.location.sectionTitle}
             </h2>
             <h3
               className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-5 sm:mb-8 text-white ${playfair.className}`}
             >
-              Visit Karmel
+              {t.location.sectionSubtitle}
             </h3>
             <a
               href={restaurantInfo.mapsUrl}
@@ -489,15 +564,19 @@ export default function Home() {
               {restaurantInfo.phone}
             </a>
             <div className="text-stone-400 text-xs sm:text-sm space-y-1.5">
-              {restaurantInfo.hours.map((h) => (
-                <div
-                  key={h.day}
-                  className="flex justify-between max-w-xs gap-4"
-                >
-                  <span>{h.day}</span>
-                  <span className="text-stone-300 whitespace-nowrap">{h.time}</span>
-                </div>
-              ))}
+              {restaurantInfo.hours.map((h) => {
+                const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                const dayIndex = dayNames.indexOf(h.day.slice(0, 3));
+                const dateStr = `2024-01-${dayIndex + 1}`;
+                const dayNum = new Date(dateStr).getDay();
+                const dayName = t.common.dayNamesShort?.[dayNum] || dayNames[dayNum];
+                return (
+                  <div key={h.day} className="flex justify-between max-w-xs gap-4">
+                    <span>{dayName}</span>
+                    <span className="text-stone-300 whitespace-nowrap">{h.time}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
           <MapEmbed />
@@ -527,24 +606,36 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="hover:text-amber-500 transition-colors text-center"
               >
-                {restaurantInfo.address}
+                {t.footer.address}
               </a>
               <p className="hidden sm:block text-amber-500">|</p>
               <a
                 href={restaurantInfo.phoneHref}
                 className="hover:text-amber-500 transition-colors"
               >
-                {restaurantInfo.phone}
+                {t.footer.phone}
               </a>
             </div>
           </div>
-                    <div className="flex justify-center gap-4 sm:gap-6 mt-10 sm:mt-16 text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-stone-500">
-            <Link href="/impressum" className="hover:text-amber-500 transition-colors">Impressum</Link>
+          <div className="flex justify-center gap-4 sm:gap-6 mt-10 sm:mt-16 text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-stone-500">
+            <Link href="/impressum" className="hover:text-amber-500 transition-colors">{t.footer.impressum}</Link>
             <span className="text-stone-700">|</span>
-            <Link href="/datenschutz" className="hover:text-amber-500 transition-colors">Datenschutz</Link>
+            <Link href="/datenschutz" className="hover:text-amber-500 transition-colors">{t.footer.privacy}</Link>
+            <span className="text-stone-700">|</span>
+            <button
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  localStorage.removeItem("karmel-cookie-consent");
+                  window.location.reload();
+                }
+              }}
+              className="hover:text-amber-500 transition-colors bg-transparent p-0"
+            >
+              {t.footer.cookieSettings}
+            </button>
           </div>
           <p className="text-stone-500 text-[8px] sm:text-[9px] uppercase tracking-[0.25em] mt-4">
-            &copy; {new Date().getFullYear()} Karmel Café &amp; Restaurant.
+            &copy; {new Date().getFullYear()} Karmel Café & Restaurant. {t.footer.rights}
           </p>
         </div>
       </footer>

@@ -1,13 +1,24 @@
 import { prisma } from "@/lib/prisma";
-import AdminTable from "./AdminTable";
+import AdminTableClient from "./AdminTableClient";
 
 export default async function AdminPage() {
-  const reservations = await prisma.reservation.findMany({ orderBy: { date: "asc" } });
+  const reservations = await prisma.reservation.findMany({
+    orderBy: { date: "asc" },
+    include: { user: { select: { name: true, email: true } } },
+  });
 
-  return (
-    <>
-      <h1 className="text-4xl text-white mb-10">Reservations</h1>
-      <AdminTable initial={JSON.parse(JSON.stringify(reservations))} />
-    </>
-  );
+  const formatted = reservations.map((r) => ({
+    id: r.id,
+    name: r.user?.name || r.name,
+    email: r.user?.email || r.email,
+    phone: r.phone,
+    date: r.date.toISOString().split("T")[0],
+    time: r.time,
+    partySize: r.partySize,
+    tableNumber: r.tableNumber,
+    status: r.status,
+    notes: r.notes,
+  }));
+
+  return <AdminTableClient initial={formatted} />;
 }

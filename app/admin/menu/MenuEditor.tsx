@@ -1,10 +1,12 @@
 "use client";
 import { useState } from "react";
+import { useLanguage } from "@/lib/languageContext";
 
 type Item = { id: string; name: string; desc: string | null; price: string; star: boolean; available: boolean };
 type Category = { id: string; title: string; subtitle: string; items: Item[] };
 
 export default function MenuEditor({ initial }: { initial: Category[] }) {
+  const { t } = useLanguage();
   const [categories, setCategories] = useState(initial);
   const [newCatTitle, setNewCatTitle] = useState("");
   const [newCatSubtitle, setNewCatSubtitle] = useState("");
@@ -23,7 +25,7 @@ export default function MenuEditor({ initial }: { initial: Category[] }) {
   }
 
   async function deleteCategory(id: string) {
-    if (!confirm("Delete this whole category and its items?")) return;
+    if (!confirm(t.admin.deleteCategoryConfirm || "Delete this whole category and its items?")) return;
     setCategories((c) => c.filter((cat) => cat.id !== id));
     await fetch(`/api/admin/menu-categories/${id}`, { method: "DELETE" });
   }
@@ -73,10 +75,10 @@ export default function MenuEditor({ initial }: { initial: Category[] }) {
             </div>
             <div className="flex gap-3">
               <button onClick={() => addItem(cat.id)} className="text-xs text-amber-500 hover:text-amber-400">
-                + Add item
+                {t.admin.addItem}
               </button>
               <button onClick={() => deleteCategory(cat.id)} className="text-xs text-red-400 hover:text-red-300">
-                Delete category
+                {t.admin.deleteCategory}
               </button>
             </div>
           </div>
@@ -88,19 +90,19 @@ export default function MenuEditor({ initial }: { initial: Category[] }) {
                   defaultValue={item.name}
                   onBlur={(e) => updateItem(cat.id, item.id, { name: e.target.value })}
                   className="col-span-3 bg-transparent border-b border-stone-700 focus:border-amber-500 outline-none text-sm py-1"
-                  placeholder="Name"
+                  placeholder={t.admin.itemName}
                 />
                 <input
                   defaultValue={item.desc ?? ""}
                   onBlur={(e) => updateItem(cat.id, item.id, { desc: e.target.value })}
                   className="col-span-4 bg-transparent border-b border-stone-700 focus:border-amber-500 outline-none text-sm py-1"
-                  placeholder="Description"
+                  placeholder={t.admin.itemDescription}
                 />
                 <input
                   defaultValue={item.price}
                   onBlur={(e) => updateItem(cat.id, item.id, { price: e.target.value })}
                   className="col-span-2 bg-transparent border-b border-stone-700 focus:border-amber-500 outline-none text-sm py-1"
-                  placeholder="Price"
+                  placeholder={t.admin.itemPrice}
                 />
                 <label className="col-span-1 flex items-center gap-1 text-xs text-stone-400">
                   <input
@@ -108,7 +110,7 @@ export default function MenuEditor({ initial }: { initial: Category[] }) {
                     defaultChecked={item.available}
                     onChange={(e) => updateItem(cat.id, item.id, { available: e.target.checked })}
                   />
-                  Live
+                  {t.admin.live}
                 </label>
                 <label className="col-span-1 flex items-center gap-1 text-xs text-stone-400">
                   <input
@@ -116,37 +118,37 @@ export default function MenuEditor({ initial }: { initial: Category[] }) {
                     defaultChecked={item.star}
                     onChange={(e) => updateItem(cat.id, item.id, { star: e.target.checked })}
                   />
-                  ★
+                  {t.admin.starred}
                 </label>
                 <button
                   onClick={() => deleteItem(cat.id, item.id)}
                   className="col-span-1 text-red-400 hover:text-red-300 text-xs text-right"
                 >
-                  Delete
+                  {t.admin.delete}
                 </button>
               </div>
             ))}
-            {cat.items.length === 0 && <p className="text-stone-600 text-xs">No items yet.</p>}
+            {cat.items.length === 0 && <p className="text-stone-600 text-xs">{t.admin.noItemsYet}</p>}
           </div>
         </div>
       ))}
 
       <div className="border border-dashed border-white/20 p-6 flex flex-col gap-3">
-        <h3 className="text-sm text-white uppercase tracking-widest">Add category</h3>
+        <h3 className="text-sm text-white uppercase tracking-widest">{t.admin.addCategory}</h3>
         <input
           value={newCatTitle}
           onChange={(e) => setNewCatTitle(e.target.value)}
-          placeholder="Title (e.g. Desserts)"
+          placeholder={t.admin.categoryTitlePlaceholder}
           className="bg-transparent border-b border-stone-700 focus:border-amber-500 outline-none text-sm py-2"
         />
         <input
           value={newCatSubtitle}
           onChange={(e) => setNewCatSubtitle(e.target.value)}
-          placeholder="Subtitle (e.g. Sweet endings)"
+          placeholder={t.admin.categorySubtitlePlaceholder}
           className="bg-transparent border-b border-stone-700 focus:border-amber-500 outline-none text-sm py-2"
         />
         <button onClick={addCategory} className="mt-2 py-3 bg-amber-500 text-black text-xs font-bold uppercase tracking-widest w-fit px-6">
-          Add category
+          {t.admin.addCategory}
         </button>
       </div>
     </div>

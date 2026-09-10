@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import { useLanguage } from "@/lib/languageContext";
 
 type Reservation = {
   id: string;
@@ -17,6 +18,7 @@ function toDateKey(d: Date) {
 }
 
 export default function CalendarView({ reservations }: { reservations: Reservation[] }) {
+  const { t } = useLanguage();
   const today = new Date();
   const [monthCursor, setMonthCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState(toDateKey(today));
@@ -54,7 +56,7 @@ export default function CalendarView({ reservations }: { reservations: Reservati
             onClick={() => setMonthCursor(new Date(year, month - 1, 1))}
             className="text-stone-400 hover:text-amber-500 text-sm"
           >
-            ← Prev
+            {t.admin.prev}
           </button>
           <span className="text-white text-sm uppercase tracking-widest">
             {monthCursor.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
@@ -63,7 +65,7 @@ export default function CalendarView({ reservations }: { reservations: Reservati
             onClick={() => setMonthCursor(new Date(year, month + 1, 1))}
             className="text-stone-400 hover:text-amber-500 text-sm"
           >
-            Next →
+            {t.admin.next}
           </button>
         </div>
         <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-stone-500 uppercase mb-2">
@@ -111,18 +113,18 @@ export default function CalendarView({ reservations }: { reservations: Reservati
             day: "numeric",
             month: "long",
           })}{" "}
-          <span className="text-stone-500 text-sm">({dayReservations.length} reservations)</span>
+          <span className="text-stone-500 text-sm">({dayReservations.length} {t.admin.reservations})</span>
         </h2>
         <div className="flex flex-col gap-3">
           {dayReservations.map((r) => (
             <div key={r.id} className="border border-white/10 p-4 flex justify-between items-center text-sm">
               <div>
                 <p className="text-white">{r.time} — {r.name}</p>
-                <p className="text-stone-500 text-xs">{r.partySize} guests · {r.phone}</p>
+                <p className="text-stone-500 text-xs">{r.partySize} {t.admin.guests} · {r.phone}</p>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-stone-400">
-                  Table {r.tableNumber ?? "—"}
+                  {t.admin.table} {r.tableNumber ?? "—"}
                 </span>
                 <span
                   className={`text-[10px] uppercase px-2 py-1 border ${
@@ -139,7 +141,7 @@ export default function CalendarView({ reservations }: { reservations: Reservati
             </div>
           ))}
           {dayReservations.length === 0 && (
-            <p className="text-stone-600 text-sm">No reservations on this day.</p>
+            <p className="text-stone-600 text-sm">{t.admin.noReservationsThisDay}</p>
           )}
         </div>
       </div>

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { Prisma } from "@prisma/client";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import {
@@ -9,6 +11,14 @@ import {
   reservationChangeRequestHtml,
 } from "@/lib/mailer";
 import { sendSms } from "@/lib/sms";
+
+const VALID_STATUSES = ["PENDING", "CONFIRMED", "CANCELLED", "CHANGE_REQUESTED"] as const;
+const updateSchema = z.object({
+  tableNumber: z.number().int().nullable().optional(),
+  status: z.enum(VALID_STATUSES).optional(),
+  requestedTime: z.string().datetime().optional(),
+  notes: z.string().optional(),
+});
 
 async function requireAdmin() {
   const session = await auth();
@@ -21,20 +31,28 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   const body = await req.json();
 
+  // Validate input
+  const parsed = updateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+  }
+  const { tableNumber, status, requestedTime, notes } = parsed.data;
+
   const before = await prisma.reservation.findUnique({ where: { id } });
   if (!before) return NextResponse.json({ error: "Not found." }, { status: 404 });
 
-  const isNewChangeRequest = body.status === "CHANGE_REQUESTED" && body.requestedTime;
+  const isNewChangeRequest = status === "CHANGE_REQUESTED" && requestedTime;
   const responseToken = isNewChangeRequest ? crypto.randomBytes(24).toString("hex") : undefined;
 
   try {
     const reservation = await prisma.reservation.update({
       where: { id },
       data: {
-        tableNumber: body.tableNumber ?? undefined,
-        status: body.status ?? undefined,
-        requestedTime: body.requestedTime ?? undefined,
+        tableNumber: tableNumber ?? undefined,
+        status: status ?? undefined,
+        requestedTime: requestedTime ?? undefined,
         responseToken: responseToken ?? undefined,
+        notes: notes ?? undefined,
       },
     });
 
@@ -42,7 +60,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const baseUrl = process.env.NEXTAUTH_URL || "";
 
     // Fire the right notification based on what actually changed.
-    if (body.status === "CONFIRMED" && before.status !== "CONFIRMED") {
+    if (status === "CONFIRMED" && before.status !== "CONFIRMED") {
       await sendMail(
         reservation.email,
         "Reservation confirmed — Karmel Café & Restaurant",
@@ -51,7 +69,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       await sendSms(reservation.phone, `Karmel: your reservation for ${dateLabel} at ${reservation.time} is confirmed.`);
     }
 
-    if (body.status === "CANCELLED" && before.status !== "CANCELLED") {
+    if (status === "CANCELLED" && before.status !== "CANCELLED") {
       await sendMail(
         reservation.email,
         "Reservation cancelled — Karmel Café & Restaurant",
@@ -61,7 +79,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     if (isNewChangeRequest && responseToken) {
-      const proposedTime = new Date(body.requestedTime).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+      const proposedTime = new Date(requestedTime).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
       await sendMail(
         reservation.email,
         "Requested time change — Karmel Café & Restaurant",
@@ -93,6 +111,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { id } = await params;
-  await prisma.reservation.delete({ where: { id } });
+  try {
+    await prisma.reservation.delete({ where: { id } });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
+      return NextResponse.json({ error: "Not found." }, { status: 404 });
+    }
+    throw err;
+  }
   return NextResponse.json({ ok: true });
 }

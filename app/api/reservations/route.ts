@@ -9,7 +9,12 @@ const schema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   phone: z.string().min(6),
-  date: z.string(), // yyyy-mm-dd
+  date: z.string().refine((val) => {
+    const date = new Date(val);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date >= today;
+  }, { message: "Reservation date must be today or in the future" }),
   time: z.string(),
   partySize: z.coerce.number().int().min(1).max(30),
   notes: z.string().max(1000).optional(),
