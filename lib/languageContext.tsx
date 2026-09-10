@@ -58,6 +58,30 @@ type TranslationKeys = {
     categories: Record<string, string>;
     price: string;
     popular: string;
+    // Main categories
+    breakfast: string;
+    breakfastSubtitle: string;
+    lunch: string;
+    lunchSubtitle: string;
+    dinner: string;
+    dinnerSubtitle: string;
+    drinks: string;
+    drinksSubtitle: string;
+    // Subcategories
+    subcatShakshuka: string;
+    subcatBasaliyaThunfisch: string;
+    subcatFuulThunfisch: string;
+    subcatCanjeelo: string;
+    subcatMalawax: string;
+    subcatBariis: string;
+    subcatMuufo: string;
+    subcatSoor: string;
+    subcatSnacks: string;
+    subcatBaasto: string;
+    subcatSabaayad: string;
+    subcatWarmeGetranke: string;
+    subcatKalteGetranke: string;
+    subcatSoftDrinks: string;
     // Category titles and subtitles
     warmeGetrankeTitle: string;
     warmeGetrankeSubtitle: string;
@@ -472,6 +496,30 @@ const fallbackTranslations: TranslationData = {
       },
       price: "Preis",
       popular: "Beliebt",
+      // Main categories
+      breakfast: "Frühstück",
+      breakfastSubtitle: "Quraac / Frühstück",
+      lunch: "Mittagessen",
+      lunchSubtitle: "Qado / Mittagessen",
+      dinner: "Abendessen",
+      dinnerSubtitle: "Casho / Abendessen",
+      drinks: "Getränke",
+      drinksSubtitle: "Getränke",
+      // Subcategories
+      subcatShakshuka: "Shakshuka",
+      subcatBasaliyaThunfisch: "Basaliya iyo Thunfisch",
+      subcatFuulThunfisch: "Fuul iyo Thunfisch",
+      subcatCanjeelo: "Canjeelo / Laxoox Somali",
+      subcatMalawax: "Malawax",
+      subcatBariis: "Bariis / Reis",
+      subcatMuufo: "Muufo Somali",
+      subcatSoor: "Soor / Maisbrei",
+      subcatSnacks: "Cunto Fudud / Snacks",
+      subcatBaasto: "Baasto / Spaghetti",
+      subcatSabaayad: "Sabaayad / Chapati",
+      subcatWarmeGetranke: "Shaah iyo Kofee",
+      subcatKalteGetranke: "Cabitaan Qabow / Mushakal",
+      subcatSoftDrinks: "Soft Drinks",
       // Category titles and subtitles
       warmeGetrankeTitle: "Shaah iyo Kofee",
       warmeGetrankeSubtitle: "Warme Getränke",
@@ -871,6 +919,30 @@ const fallbackTranslations: TranslationData = {
       },
       price: "Price",
       popular: "Popular",
+      // Main categories
+      breakfast: "Breakfast",
+      breakfastSubtitle: "Quraac / Breakfast",
+      lunch: "Lunch",
+      lunchSubtitle: "Qado / Lunch",
+      dinner: "Dinner",
+      dinnerSubtitle: "Casho / Dinner",
+      drinks: "Drinks",
+      drinksSubtitle: "Drinks",
+      // Subcategories
+      subcatShakshuka: "Shakshuka",
+      subcatBasaliyaThunfisch: "Basaliya iyo Thunfisch",
+      subcatFuulThunfisch: "Fuul iyo Thunfisch",
+      subcatCanjeelo: "Canjeelo / Laxoox Somali",
+      subcatMalawax: "Malawax",
+      subcatBariis: "Bariis / Rice",
+      subcatMuufo: "Muufo Somali",
+      subcatSoor: "Soor / Corn Porridge",
+      subcatSnacks: "Cunto Fudud / Snacks",
+      subcatBaasto: "Baasto / Spaghetti",
+      subcatSabaayad: "Sabaayad / Chapati",
+      subcatWarmeGetranke: "Shaah iyo Kofee",
+      subcatKalteGetranke: "Cabitaan Qabow / Mushakal",
+      subcatSoftDrinks: "Soft Drinks",
       // Category titles and subtitles
       warmeGetrankeTitle: "Shaah iyo Kofee",
       warmeGetrankeSubtitle: "Hot Drinks",

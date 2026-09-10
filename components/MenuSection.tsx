@@ -6,8 +6,9 @@ import { useLanguage } from "@/lib/languageContext";
 
 const playfair = Playfair_Display({ subsets: ["latin"], weight: ["400", "600", "700", "800"] });
 
-type MenuItem = { id: string; name: string; desc: string | null; price: string; star: boolean };
-type MenuCategory = { id: string; slug: string; title: string; subtitle: string; items: MenuItem[] };
+type MenuItem = { id: string; name: string; desc: string | null; price: string; star: boolean; available: boolean };
+type SubCategory = { id: string; slug: string; title: string; subtitle: string; order: number; items: MenuItem[] };
+type MainCategory = { id: string; slug: string; title: string; subtitle: string; order: number; children: SubCategory[] };
 
 // Map database item names to translation keys
 const itemTranslationMap: Record<string, { nameKey: string; descKey?: string }> = {
@@ -29,7 +30,9 @@ const itemTranslationMap: Record<string, { nameKey: string; descKey?: string }> 
   "Strawberry Mix": { nameKey: "strawberryMix" },
   "Banana": { nameKey: "banana" },
   "Banana-Max": { nameKey: "bananaMax" },
-  "Cola / Fanta / Sprite": { nameKey: "colaFantaSprite" },
+  "Cola": { nameKey: "colaFantaSprite" },
+  "Fanta": { nameKey: "colaFantaSprite" },
+  "Sprite": { nameKey: "colaFantaSprite" },
   "Orange und Ayran": { nameKey: "orangeAyran" },
   "Kleines Wasser": { nameKey: "kleinesWasser", descKey: "kleinesWasserDesc" },
   "Shakshuka": { nameKey: "shakshuka" },
@@ -81,69 +84,58 @@ const itemTranslationMap: Record<string, { nameKey: string; descKey?: string }> 
   "Bariis 5/6 qof": { nameKey: "bariis56Qof", descKey: "bariis56QofDesc" },
 };
 
-// Map category slugs to translation keys
-const categoryTitleMap: Record<string, string> = {
-  "warme-getranke": "warmeGetrankeTitle",
-  "kalte-getranke": "kalteGetrankeTitle",
-  fruhstuck: "fruhstuckTitle",
-  pfannkuchen: "pfannkuchenTitle",
-  fladenbrot: "fladenbrotTitle",
-  maisbrei: "maisbreiTitle",
-  snacks: "snacksTitle",
-  spaghetti: "spaghettiTitle",
-  mittagessen: "mittagessenTitle",
-};
-
-const categorySubtitleMap: Record<string, string> = {
-  "warme-getranke": "warmeGetrankeSubtitle",
-  "kalte-getranke": "kalteGetrankeSubtitle",
-  fruhstuck: "fruhstuckSubtitle",
-  pfannkuchen: "pfannkuchenSubtitle",
-  fladenbrot: "fladenbrotSubtitle",
-  maisbrei: "maisbreiSubtitle",
-  snacks: "snacksSubtitle",
-  spaghetti: "spaghettiSubtitle",
-  mittagessen: "mittagessenSubtitle",
-};
-
 export default function MenuSection() {
   const { t, lang } = useLanguage();
-  const [categories, setCategories] = useState<MenuCategory[]>([]);
-  const [active, setActive] = useState<string>("");
+  const [mainCategories, setMainCategories] = useState<MainCategory[]>([]);
+  const [activeMainSlug, setActiveMainSlug] = useState<string>("");
+  const [activeSubSlug, setActiveSubSlug] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/menu")
       .then((r) => r.json())
       .then((data) => {
-        setCategories(data.categories || []);
-        if (data.categories?.length) setActive(data.categories[0].id);
+        setMainCategories(data.mainCategories || []);
+        if (data.mainCategories?.length) {
+          const firstMain = data.mainCategories[0];
+          setActiveMainSlug(firstMain.slug);
+          if (firstMain.children?.length) {
+            setActiveSubSlug(firstMain.children[0].slug);
+          }
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
 
-  const category = categories.find((c) => c.id === active);
+  const activeMain = mainCategories.find((c) => c.slug === activeMainSlug);
+  const activeSub = activeMain?.children?.find((c) => c.slug === activeSubSlug);
 
-  // Get translated category title and subtitle (always run hooks)
-  const translatedCategoryTitle = category ? (categoryTitleMap[category.slug] ? (t.menu[categoryTitleMap[category.slug] as keyof typeof t.menu] as string) : category.title) : "";
-  const translatedCategorySubtitle = category ? (categorySubtitleMap[category.slug] ? (t.menu[categorySubtitleMap[category.slug] as keyof typeof t.menu] as string) : category.subtitle) : "";
+  // Get translated main category title
+  const translatedMainTitle = activeMain ? (t.menu[activeMain.slug as keyof typeof t.menu] as string || activeMain.title) : "";
+  const translatedMainSubtitle = activeMain ? (t.menu[`${activeMain.slug}Subtitle` as keyof typeof t.menu] as string || activeMain.subtitle) : "";
 
-  // Translate items (always run hooks)
+  // Get translated subcategory title
+  const translatedSubTitle = activeSub ? activeSub.title : "";
+  const translatedSubSubtitle = activeSub ? activeSub.subtitle : "";
+
+  // Translate items for active subcategory
   const translatedItems = useMemo(() => {
-    if (!category) return [];
-    return category.items.map((item) => {
-      const translation = itemTranslationMap[item.name];
-      if (translation) {
-        return {
-          ...item,
-          name: t.menu[translation.nameKey as keyof typeof t.menu] as string,
-          desc: translation.descKey ? t.menu[translation.descKey as keyof typeof t.menu] as string : item.desc,
-        };
-      }
-      return item;
-    });
-  }, [category?.items, t.menu, lang]);
+    if (!activeSub) return [];
+    return activeSub.items
+      .filter((item) => item.available)
+      .map((item) => {
+        const translation = itemTranslationMap[item.name];
+        if (translation) {
+          return {
+            ...item,
+            name: t.menu[translation.nameKey as keyof typeof t.menu] as string,
+            desc: translation.descKey ? t.menu[translation.descKey as keyof typeof t.menu] as string : item.desc,
+          };
+        }
+        return item;
+      });
+  }, [activeSub?.items, t.menu, lang]);
 
   const mid = Math.ceil(translatedItems.length / 2);
   const colA = translatedItems.slice(0, mid);
@@ -157,53 +149,78 @@ export default function MenuSection() {
     );
   }
 
-  if (!category) return null;
+  if (!activeMain) return null;
 
   return (
     <section id="menu" className="relative bg-[#0a0a0a] py-32 px-6 md:px-16">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-16 border-b border-stone-800 pb-10">
-          <h2 className="text-[10px] tracking-[0.4em] font-bold text-amber-500 uppercase mb-4">{t.menu.title}</h2>
-          <h3 className={`text-6xl md:text-8xl text-white ${playfair.className}`}>{t.menu.subtitle}</h3>
+        {/* Main category title */}
+        <div className="mb-10 border-b border-stone-800 pb-8">
+          <h2 className="text-[10px] tracking-[0.4em] font-bold text-amber-500 uppercase mb-3">{translatedMainTitle}</h2>
+          <h3 className={`text-5xl md:text-7xl text-white ${playfair.className}`}>{translatedMainSubtitle}</h3>
         </div>
 
-        <div className="flex gap-4 mb-16 overflow-x-auto pb-4 scrollbar-none -mx-6 px-6 sm:mx-0 sm:px-0 sm:flex-wrap">
-          {categories.map((c) => (
+        {/* Main category tabs */}
+        <div className="flex gap-3 mb-10 overflow-x-auto pb-4 scrollbar-none -mx-6 px-6 sm:mx-0 sm:px-0">
+          {mainCategories.map((cat) => (
             <button
-              key={c.id}
-              onClick={() => setActive(c.id)}
-              className={`px-6 py-3.5 text-[11px] uppercase tracking-[0.2em] font-semibold border transition-all duration-300 whitespace-nowrap ${
-                active === c.id
+              key={cat.id}
+              onClick={() => {
+                setActiveMainSlug(cat.slug);
+                if (cat.children?.length) setActiveSubSlug(cat.children[0].slug);
+              }}
+              className={`px-5 py-2.5 text-[10px] uppercase tracking-[0.2em] font-semibold border transition-all duration-300 whitespace-nowrap ${
+                activeMainSlug === cat.slug
                   ? "bg-amber-500 text-black border-amber-500"
                   : "border-stone-700 text-stone-300 hover:border-amber-500 hover:text-amber-500"
               }`}
             >
-              {t.menu.categories[c.slug] || c.title}
+              {t.menu[cat.slug as keyof typeof t.menu] as string || cat.title}
             </button>
           ))}
         </div>
 
+        {/* Subcategory tabs */}
+        {activeMain && activeMain.children.length > 0 && (
+          <div className="flex gap-3 mb-12 overflow-x-auto pb-4 scrollbar-none -mx-6 px-6 sm:mx-0 sm:px-0">
+            {activeMain.children.map((sub) => (
+              <button
+                key={sub.id}
+                onClick={() => setActiveSubSlug(sub.slug)}
+                className={`px-4 py-2 text-[10px] uppercase tracking-[0.15em] font-medium border transition-all duration-300 whitespace-nowrap ${
+                  activeSubSlug === sub.slug
+                    ? "bg-white/10 text-white border-amber-500"
+                    : "border-stone-700 text-stone-400 hover:border-amber-500 hover:text-white"
+                }`}
+              >
+                {t.menu[`subcat${sub.slug.charAt(0).toUpperCase() + sub.slug.slice(1)}` as keyof typeof t.menu] as string || sub.title}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Items */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={active}
+            key={activeSubSlug}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.35 }}
           >
-            <p className="text-stone-500 text-sm tracking-widest uppercase mb-12">{translatedCategorySubtitle}</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-12">
+            <p className="text-stone-500 text-sm tracking-widest uppercase mb-10">{translatedSubSubtitle || (activeSub ? t.menu[`subcat${activeSub.slug.charAt(0).toUpperCase() + activeSub.slug.slice(1)}` as keyof typeof t.menu] as string : "")}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-10">
               {[colA, colB].map((col, i) => (
-                <div key={i} className="flex flex-col gap-10">
+                <div key={i} className="flex flex-col gap-8">
                   {col.map((item) => (
                     <div key={item.id} className="group">
-                      <div className="flex justify-between items-baseline gap-6 border-b border-stone-800 pb-3 group-hover:border-amber-500 transition-colors">
-                        <h5 className={`text-2xl text-white group-hover:text-amber-500 transition-colors ${playfair.className}`}>
+                      <div className="flex justify-between items-baseline gap-4 border-b border-stone-800 pb-2 group-hover:border-amber-500 transition-colors">
+                        <h5 className={`text-xl md:text-2xl text-white group-hover:text-amber-500 transition-colors ${playfair.className}`}>
                           {item.name} {item.star && <span className="text-amber-500 text-sm align-super">★</span>}
                         </h5>
                         <span className="text-amber-500 font-medium text-lg whitespace-nowrap">{item.price}</span>
                       </div>
-                      {item.desc && <p className="text-stone-400 text-sm font-light mt-2 leading-relaxed">{item.desc}</p>}
+                      {item.desc && <p className="text-stone-400 text-sm font-light mt-1.5 leading-relaxed">{item.desc}</p>}
                     </div>
                   ))}
                 </div>
