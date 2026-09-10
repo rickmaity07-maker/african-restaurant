@@ -161,7 +161,7 @@ export default function MenuSection() {
         </div>
 
         {/* Main category tabs */}
-        <div className="flex gap-3 mb-10 overflow-x-auto pb-4 scrollbar-none -mx-6 px-6 sm:mx-0 sm:px-0">
+        <div className="flex gap-3 mb-10 overflow-x-auto pb-4 scrollbar-none -mx-6 px-6 sm:mx-0 sm:px-0 sm:justify-center">
           {mainCategories.map((cat) => (
             <button
               key={cat.id}
@@ -182,7 +182,7 @@ export default function MenuSection() {
 
         {/* Subcategory tabs */}
         {activeMain && activeMain.children.length > 0 && (
-          <div className="flex gap-3 mb-12 overflow-x-auto pb-4 scrollbar-none -mx-6 px-6 sm:mx-0 sm:px-0">
+          <div className="flex gap-3 mb-12 overflow-x-auto pb-4 scrollbar-none -mx-6 px-6 sm:mx-0 sm:px-0 sm:justify-center">
             {activeMain.children.map((sub) => (
               <button
                 key={sub.id}

@@ -10,13 +10,27 @@ async function requireAdmin() {
 
 export async function POST(req: NextRequest) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const { title, subtitle } = await req.json();
+  const { title, subtitle, slug, isMainCategory, parentId } = await req.json();
   if (!title) return NextResponse.json({ error: "Title required." }, { status: 400 });
 
-  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-  const count = await prisma.menuCategory.count();
+  const finalSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  
+  let order = 0;
+  if (isMainCategory) {
+    order = await prisma.menuCategory.count({ where: { isMainCategory: true } });
+  } else if (parentId) {
+    order = await prisma.menuCategory.count({ where: { parentId } });
+  }
+
   const category = await prisma.menuCategory.create({
-    data: { title, subtitle: subtitle || "", slug, order: count },
+    data: { 
+      title, 
+      subtitle: subtitle || "", 
+      slug: finalSlug, 
+      order, 
+      isMainCategory: isMainCategory || false,
+      parentId: parentId || null,
+    },
   });
   return NextResponse.json({ category });
 }

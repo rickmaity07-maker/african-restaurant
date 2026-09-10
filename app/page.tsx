@@ -297,7 +297,9 @@ export default function Home() {
           >
             <span className="hidden sm:block">{t.nav.reservations}</span>
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-amber-500/30 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-black transition-all duration-300 text-sm">
-              ↗
+              <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v16H4z M8 8h8 M8 12h8 M8 16h8 M12 4v16" />
+              </svg>
             </div>
           </Link>
 
@@ -306,7 +308,7 @@ export default function Home() {
             type="button"
             aria-label="Toggle menu"
             onClick={() => setMobileOpen((v) => !v)}
-            className="md:hidden w-9 h-9 flex flex-col items-center justify-center gap-1.5 border border-stone-700 rounded-full"
+            className="md:hidden w-9 h-9 flex flex-col items-center justify-center gap-1.5 border border-stone-700 rounded-full ml-2"
           >
             <span
               className={`block w-4 h-[1.5px] bg-stone-200 transition-all ${

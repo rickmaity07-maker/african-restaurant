@@ -15,7 +15,26 @@ export async function DELETE(
   if (!(await requireAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id } = await params;
-  // Cascade delete will handle items due to schema relation
   await prisma.menuCategory.delete({ where: { id } });
   return NextResponse.json({ ok: true });
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await requireAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const { id } = await params;
+  const { title, subtitle, slug } = await req.json();
+
+  const category = await prisma.menuCategory.update({
+    where: { id },
+    data: { 
+      title: title ?? undefined, 
+      subtitle: subtitle ?? undefined, 
+      slug: slug ?? undefined,
+    },
+  });
+  return NextResponse.json({ category });
 }

@@ -356,6 +356,13 @@ type TranslationKeys = {
     categoryTitlePlaceholder: string;
     categorySubtitlePlaceholder: string;
     deleteCategoryConfirm: string;
+    // Main category / Subcategory management
+    edit: string;
+    cancel: string;
+    addSubcategory: string;
+    mainCategory: string;
+    subCategory: string;
+    slug: string;
     // History
     reservationHistory: string;
     // Calendar
@@ -794,6 +801,13 @@ const fallbackTranslations: TranslationData = {
       categoryTitlePlaceholder: "Titel (z. B. Desserts)",
       categorySubtitlePlaceholder: "Untertitel (z. B. Süße Enden)",
       deleteCategoryConfirm: "Diese ganze Kategorie und ihre Artikel löschen?",
+      // Main category / Subcategory management
+      edit: "Bearbeiten",
+      cancel: "Abbrechen",
+      addSubcategory: "Unterkategorie hinzufügen",
+      mainCategory: "Hauptkategorie",
+      subCategory: "Unterkategorie",
+      slug: "Slug (z. B. breakfast)",
       // History
       reservationHistory: "Reservierungsverlauf",
       // Calendar
@@ -1217,6 +1231,13 @@ const fallbackTranslations: TranslationData = {
       categoryTitlePlaceholder: "Title (e.g. Desserts)",
       categorySubtitlePlaceholder: "Subtitle (e.g. Sweet endings)",
       deleteCategoryConfirm: "Delete this whole category and its items?",
+      // Main category / Subcategory management
+      edit: "Edit",
+      cancel: "Cancel",
+      addSubcategory: "Add Subcategory",
+      mainCategory: "Main Category",
+      subCategory: "Subcategory",
+      slug: "Slug (e.g. breakfast)",
       // History
       reservationHistory: "Reservation History",
       // Calendar
