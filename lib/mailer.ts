@@ -1,44 +1,54 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
 const FROM =
   process.env.EMAIL_FROM ||
-  "Karmel Café & Restaurant <onboarding@resend.dev>";
+  "Karmel Café & Restaurant <noreply@gmail.com>";
 
-let resend: Resend | null = null;
+let transporter: nodemailer.Transporter | null = null;
 
-function getResend(): Resend {
-  if (resend) return resend;
-  const key = process.env.RESEND_API_KEY;
-  if (!key) throw new Error("RESEND_API_KEY is not set");
-  resend = new Resend(key);
-  return resend;
+function getTransporter(): nodemailer.Transporter {
+  if (transporter) return transporter;
+  
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD;
+  
+  if (!user || !pass) {
+    throw new Error("GMAIL_USER and GMAIL_APP_PASSWORD must be set in environment variables");
+  }
+  
+  transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: { user, pass },
+  });
+  
+  return transporter;
 }
 
 export async function sendMail(to: string, subject: string, html: string) {
-  if (!process.env.RESEND_API_KEY) {
-    console.error(`[mailer] RESEND_API_KEY missing — email NOT sent: "${subject}" -> ${to}`);
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    console.error(`[mailer] Gmail credentials missing — email NOT sent: "${subject}" -> ${to}`);
     return { id: null, error: "not_configured" as const };
   }
-  const { data, error } = await getResend().emails.send({ from: FROM, to, subject, html });
-  if (error) {
+  
+  try {
+    const info = await getTransporter().sendMail({ from: FROM, to, subject, html });
+    return { id: info.messageId ?? null, error: null };
+  } catch (error) {
     console.error(`[mailer] send failed: "${subject}" -> ${to}:`, error);
     return { id: null, error };
   }
-  return { id: data?.id ?? null, error: null };
 }
 
 function esc(s: string): string {
   return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    .replace(/&/g, "&")
+    .replace(/</g, "<")
+    .replace(/>/g, ">");
 }
 
 export function otpEmailHtml(code: string) {
   return `<div style="font-family:sans-serif;padding:24px">
-    <h2>Karmel Café &amp; Restaurant</h2>
+    <h2>Karmel Café & Restaurant</h2>
     <p>Your email verification code is:</p>
     <p style="font-size:28px;font-weight:bold;letter-spacing:4px">${esc(code)}</p>
     <p>This code expires in 10 minutes.</p>
@@ -47,7 +57,7 @@ export function otpEmailHtml(code: string) {
 
 export function resetPasswordHtml(link: string) {
   return `<div style="font-family:sans-serif;padding:24px">
-    <h2>Karmel Café &amp; Restaurant</h2>
+    <h2>Karmel Café & Restaurant</h2>
     <p>Click the link below to reset your password. This link expires in 30 minutes.</p>
     <p><a href="${link}">${link}</a></p>
   </div>`;
@@ -57,7 +67,7 @@ export function reservationUserHtml(r: {
   name: string; date: string; time: string; partySize: number;
 }) {
   return `<div style="font-family:sans-serif;padding:24px">
-    <h2>Karmel Café &amp; Restaurant</h2>
+    <h2>Karmel Café & Restaurant</h2>
     <p>Hi ${esc(r.name)}, your table reservation request has been received:</p>
     <ul>
       <li>Date: ${esc(r.date)}</li>
@@ -91,7 +101,7 @@ export function reservationConfirmedHtml(r: {
   name: string; date: string; time: string; partySize: number;
 }) {
   return `<div style="font-family:sans-serif;padding:24px">
-    <h2>Karmel Café &amp; Restaurant</h2>
+    <h2>Karmel Café & Restaurant</h2>
     <p>Hi ${esc(r.name)}, your reservation is confirmed:</p>
     <ul>
       <li>Date: ${esc(r.date)}</li>
@@ -106,7 +116,7 @@ export function reservationCancelledHtml(r: {
   name: string; date: string; time: string;
 }) {
   return `<div style="font-family:sans-serif;padding:24px">
-    <h2>Karmel Café &amp; Restaurant</h2>
+    <h2>Karmel Café & Restaurant</h2>
     <p>Hi ${esc(r.name)}, your reservation for ${esc(r.date)} at ${esc(r.time)} has been cancelled.</p>
     <p>If this wasn't expected, please contact us on 0176 21313818.</p>
   </div>`;
@@ -117,7 +127,7 @@ export function reservationChangeRequestHtml(r: {
   acceptUrl: string; declineUrl: string;
 }) {
   return `<div style="font-family:sans-serif;padding:24px">
-    <h2>Karmel Café &amp; Restaurant</h2>
+    <h2>Karmel Café & Restaurant</h2>
     <p>Hi ${esc(r.name)}, we'd like to move your reservation on ${esc(r.date)}:</p>
     <p>From <strong>${esc(r.currentTime)}</strong> to <strong>${esc(r.proposedTime)}</strong></p>
     <p style="margin-top:20px">
