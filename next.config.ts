@@ -5,7 +5,7 @@ const csp = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.googletagmanager.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: https: blob: https://images.unsplash.com https://plus.unsplash.com https://lh3.googleusercontent.com https://platform-lookaside.fbsbx.com",
-  "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://api.resend.com",
+  "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com",
   "frame-src 'self' https://accounts.google.com https://www.facebook.com https://www.google.com https://maps.google.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "frame-ancestors 'none'",

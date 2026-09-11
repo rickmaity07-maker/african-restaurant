@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLanguage } from "@/lib/languageContext";
 
 export default function ReservationForm() {
@@ -7,6 +7,7 @@ export default function ReservationForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [error, setError] = useState("");
   const [consent, setConsent] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -25,8 +26,9 @@ export default function ReservationForm() {
       setStatus("error");
       return;
     }
+    // Reset form before changing status to avoid unmounting
+    formRef.current?.reset();
     setStatus("done");
-    e.currentTarget.reset();
     setConsent(false);
   }
 
@@ -39,7 +41,7 @@ export default function ReservationForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-6 sm:gap-8 md:gap-10">
+    <form ref={formRef} onSubmit={onSubmit} className="flex flex-col gap-6 sm:gap-8 md:gap-10">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8 md:gap-10">
         <Field label={t.reservations.name} name="name" type="text" placeholder="Jane Doe" required />
         <Field label={t.reservations.email} name="email" type="email" placeholder="jane@example.com" required />

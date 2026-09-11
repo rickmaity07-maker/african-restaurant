@@ -49,7 +49,12 @@ export default function NewReservationAlert() {
 
   const [enabled, setEnabled] = useState<boolean>(getInitialEnabled);
   const [toasts, setToasts] = useState<NewReservation[]>([]);
+  const [mounted, setMounted] = useState(false);
   const sinceRef = useRef<string>(getInitialSince());
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const poll = useCallback(async () => {
     try {
@@ -104,24 +109,26 @@ export default function NewReservationAlert() {
         </button>
       )}
 
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 items-end">
-        {toasts.map((r, i) => (
-          <div
-            key={r.id + i}
-            className="bg-[#111] border border-amber-500/40 text-stone-200 text-sm px-4 py-3 shadow-lg max-w-xs"
-          >
-            <p className="text-amber-500 text-[10px] uppercase tracking-widest mb-1">New reservation</p>
-            <p>{r.name} — {new Date(r.date).toLocaleDateString("en-GB")} at {r.time}</p>
-            <p className="text-stone-500 text-xs">{r.partySize} guests</p>
-            <button
-              onClick={() => setToasts((t) => t.filter((x) => x.id !== r.id))}
-              className="text-stone-500 hover:text-stone-300 text-xs mt-1"
+      {mounted && (
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 items-end">
+          {toasts.map((r, i) => (
+            <div
+              key={r.id + i}
+              className="bg-[#111] border border-amber-500/40 text-stone-200 text-sm px-4 py-3 shadow-lg max-w-xs"
             >
-              Dismiss
-            </button>
-          </div>
-        ))}
-      </div>
+              <p className="text-amber-500 text-[10px] uppercase tracking-widest mb-1">New reservation</p>
+              <p>{r.name} — {new Date(r.date).toLocaleDateString("en-GB")} at {r.time}</p>
+              <p className="text-stone-500 text-xs">{r.partySize} guests</p>
+              <button
+                onClick={() => setToasts((t) => t.filter((x) => x.id !== r.id))}
+                className="text-stone-500 hover:text-stone-300 text-xs mt-1"
+              >
+                Dismiss
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }
