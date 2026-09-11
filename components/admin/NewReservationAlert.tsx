@@ -28,15 +28,28 @@ function playBeep() {
 }
 
 export default function NewReservationAlert() {
-  const [enabled, setEnabled] = useState(false);
-  const [toasts, setToasts] = useState<NewReservation[]>([]);
-  const sinceRef = useRef<string>(new Date().toISOString());
+  const getInitialEnabled = (): boolean => {
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem("karmel-admin-notif-enabled") === "true";
+    } catch {
+      return false;
+    }
+  };
 
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) sinceRef.current = stored;
-    setEnabled(localStorage.getItem("karmel-admin-notif-enabled") === "true");
-  }, []);
+  const getInitialSince = (): string => {
+    if (typeof window === "undefined") return new Date().toISOString();
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored || new Date().toISOString();
+    } catch {
+      return new Date().toISOString();
+    }
+  };
+
+  const [enabled, setEnabled] = useState<boolean>(getInitialEnabled);
+  const [toasts, setToasts] = useState<NewReservation[]>([]);
+  const sinceRef = useRef<string>(getInitialSince());
 
   const poll = useCallback(async () => {
     try {

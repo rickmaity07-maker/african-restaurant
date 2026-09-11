@@ -9,7 +9,6 @@ const unverifiedAccountRetentionDays = process.env.UNVERIFIED_ACCOUNT_RETENTION_
 const reservationRetentionMonths = process.env.RESERVATION_RETENTION_MONTHS || "24";
 const databaseProvider = process.env.DATABASE_PROVIDER || "Neon/PostgreSQL";
 const contactEmail = process.env.CONTACT_EMAIL || "kontakt@karmel-restaurant.de";
-const operatorName = process.env.OPERATOR_NAME || "[Vollständiger Name des Betreibers/Inhabers bzw. Rechtsform]";
 const lastUpdated = new Date().toLocaleDateString("de-DE", { year: "numeric", month: "long", day: "numeric" });
 
 export default function DatenschutzContent() {

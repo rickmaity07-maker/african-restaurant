@@ -76,7 +76,6 @@ const translateUiSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const _startTime = Date.now();
 
   try {
     if (!DEEPL_API_KEY) {

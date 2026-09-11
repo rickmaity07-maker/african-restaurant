@@ -12,7 +12,6 @@ const translateSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const _startTime = Date.now();
 
   try {
     const authHeader = req.headers.get("x-internal-secret");

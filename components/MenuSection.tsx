@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Playfair_Display } from "next/font/google";
 import { useLanguage } from "@/lib/languageContext";
@@ -85,7 +85,7 @@ const itemTranslationMap: Record<string, { nameKey: string; descKey?: string }> 
 };
 
 export default function MenuSection() {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const [mainCategories, setMainCategories] = useState<MainCategory[]>([]);
   const [activeMainSlug, setActiveMainSlug] = useState<string>("");
   const [activeSubSlug, setActiveSubSlug] = useState<string>("");
@@ -115,27 +115,24 @@ export default function MenuSection() {
   const translatedMainTitle = activeMain ? (t.menu[activeMain.slug as keyof typeof t.menu] as string || activeMain.title) : "";
   const translatedMainSubtitle = activeMain ? (t.menu[`${activeMain.slug}Subtitle` as keyof typeof t.menu] as string || activeMain.subtitle) : "";
 
-  // Get translated subcategory title
-  const translatedSubTitle = activeSub ? activeSub.title : "";
   const translatedSubSubtitle = activeSub ? activeSub.subtitle : "";
 
   // Translate items for active subcategory
-  const translatedItems = useMemo(() => {
-    if (!activeSub) return [];
-    return activeSub.items
-      .filter((item) => item.available)
-      .map((item) => {
-        const translation = itemTranslationMap[item.name];
-        if (translation) {
-          return {
-            ...item,
-            name: t.menu[translation.nameKey as keyof typeof t.menu] as string,
-            desc: translation.descKey ? t.menu[translation.descKey as keyof typeof t.menu] as string : item.desc,
-          };
-        }
-        return item;
-      });
-  }, [activeSub?.items, t.menu, lang]);
+  const translatedItems = activeSub
+    ? activeSub.items
+        .filter((item) => item.available)
+        .map((item) => {
+          const translation = itemTranslationMap[item.name];
+          if (translation) {
+            return {
+              ...item,
+              name: t.menu[translation.nameKey as keyof typeof t.menu] as string,
+              desc: translation.descKey ? t.menu[translation.descKey as keyof typeof t.menu] as string : item.desc,
+            };
+          }
+          return item;
+        })
+    : [];
 
   const mid = Math.ceil(translatedItems.length / 2);
   const colA = translatedItems.slice(0, mid);

@@ -26,7 +26,7 @@ const montserrat = Montserrat({
 });
 
 export default function Home() {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const { scrollY } = useScroll();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [navVisible, setNavVisible] = useState(true);

@@ -57,21 +57,6 @@ export default function MenuEditor({ initial }: { initial: MainCategory[] }) {
     );
   }
 
-  async function updateSubCategory(mainId: string, subId: string, patch: Partial<SubCategory>) {
-    setMainCategories((c) =>
-      c.map((cat) =>
-        cat.id === mainId
-          ? { ...cat, children: cat.children.map((sub) => (sub.id === subId ? { ...sub, ...patch } : sub)) }
-          : cat
-      )
-    );
-    await fetch(`/api/admin/menu-categories/${subId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(patch),
-    });
-  }
-
   async function deleteSubCategory(mainId: string, subId: string) {
     if (!confirm(t.admin.deleteCategoryConfirm || "Delete this subcategory and its items?")) return;
     setMainCategories((c) =>

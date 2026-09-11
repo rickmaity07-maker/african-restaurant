@@ -110,7 +110,6 @@ export default function AdminTable({ initial = [] }: { initial?: Reservation[] }
     update: (id: string, patch: Record<string, unknown>) => void;
     remove: (id: string) => void;
   }) {
-    const d = new Date(r.date);
     const isProposing = proposingId === r.id;
     return (
       <div key={r.id} className="border border-white/10 rounded-lg p-4 bg-white/5 space-y-3">

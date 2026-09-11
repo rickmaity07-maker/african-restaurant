@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 
 type Language = "de" | "en" | "es" | "fr" | "it" | "nl" | "tr" | "pl" | "ru" | "ar" | "zh" | "ja";
 
@@ -1304,27 +1304,23 @@ const STORAGE_KEY = "karmel-language";
 
 export const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-function getInitialLang(): Language {
-  return "de";
-}
-
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Language>("de");
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [translations, setTranslations] = useState<TranslationData>(fallbackTranslations);
-  const [mounted, setMounted] = useState(false);
+  const isClient = typeof window !== "undefined";
 
-  useEffect(() => {
-    setMounted(true);
+  const getInitialLang = (): Language => {
+    if (!isClient) return "de";
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY) as Language | null;
-      if (stored && stored in fallbackTranslations) {
-        setLangState(stored);
-      }
+      if (stored && stored in fallbackTranslations) return stored;
     } catch {
       // ignore
     }
-  }, []);
+    return "de";
+  };
+
+  const [lang, setLangState] = useState<Language>(getInitialLang);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translations, setTranslations] = useState<TranslationData>(fallbackTranslations);
 
   const setLang = useCallback((newLang: Language) => {
     setLangState(newLang);
@@ -1378,7 +1374,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const t = (translations[lang] || fallbackTranslations[lang] || fallbackTranslations.de) as TranslationKeys;
 
-  if (!mounted) {
+  if (!isClient) {
     return (
       <LanguageContext.Provider value={{ lang: "de", setLang: () => {}, changeLanguage: async () => {}, isTranslating: false, t: fallbackTranslations.de as TranslationKeys, translations }}>
         {children}

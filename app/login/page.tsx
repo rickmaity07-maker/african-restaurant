@@ -1,12 +1,14 @@
 "use client";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { useLanguage } from "@/lib/languageContext";
 
 export default function LoginPage() {
   const { t } = useLanguage();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -22,7 +24,7 @@ export default function LoginPage() {
       setError(res.error === "EMAIL_NOT_VERIFIED" ? "Please verify your email first." : "Invalid email or password.");
       return;
     }
-    window.location.href = "/";
+    router.push("/");
   }
 
   return (

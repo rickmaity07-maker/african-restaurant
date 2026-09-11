@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { useConsent } from "@/lib/consent";
 import { useLanguage } from "@/lib/languageContext";
 
